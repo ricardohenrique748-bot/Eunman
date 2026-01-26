@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Truck, Lock, User } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,19 +19,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
-      {/* Background with Industrial Vibe */}
-      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-primary rounded-full blur-[128px] -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-900 rounded-full blur-[128px] translate-x-1/3 translate-y-1/3" />
-      </div>
+      {/* Minimalist Glow - Only Green */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md p-8 bg-surface border border-border-color rounded-xl shadow-2xl z-10 relative backdrop-blur-sm">
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-primary/20 p-4 rounded-full mb-4 ring-1 ring-primary/50">
-            <Truck className="w-10 h-10 text-primary" />
+      <div className="w-full max-w-sm p-8 z-10 relative">
+        <div className="flex flex-col items-center mb-10">
+          <div className="relative w-32 h-32 mb-6">
+            <Image src="/logo.png" alt="Eunaman" fill className="object-contain drop-shadow-2xl" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white font-mono">EUNAMAN</h1>
-          <p className="text-gray-400 text-sm mt-2 font-medium tracking-wide">GESTÃO INTEGRADA DE FROTAS</p>
+          {/* Removed Text Title - Logo speaks for itself in minimalist design */}
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">

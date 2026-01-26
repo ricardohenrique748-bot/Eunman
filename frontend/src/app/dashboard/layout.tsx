@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { LayoutDashboard, Wrench, Shield, Package, DollarSign, Users, Truck, Settings, LogOut, ChevronDown, Disc, MapPin, CalendarClock, ListTodo } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
+import { ModeToggle } from '@/components/ui/mode-toggle'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -11,10 +13,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
             {/* Sidebar */}
-            <aside className="w-64 bg-surface border-r border-border-color flex flex-col z-20 shadow-xl">
-                <div className="h-16 flex items-center px-6 border-b border-border-color bg-surface-highlight/10">
-                    <Truck className="w-6 h-6 text-primary mr-3" />
-                    <span className="font-bold text-lg tracking-tight text-white">EUNAMAN</span>
+            <aside className="w-64 bg-surface/50 border-r border-border-color flex flex-col z-20 backdrop-blur-xl">
+                <div className="h-20 flex items-center px-6 border-b border-border-color/50">
+                    <div className="relative w-8 h-8 mr-3">
+                        <Image src="/logo.png" alt="Logo" fill className="object-contain" />
+                    </div>
+                    <span className="font-semibold text-sm tracking-wide text-foreground opacity-90">EUNAMAN</span>
                 </div>
 
                 <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
@@ -41,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </nav>
 
                 <div className="p-4 border-t border-border-color bg-surface-highlight/5">
-                    <Link href="/" className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-md transition-all group">
+                    <Link href="/" className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-500 hover:text-primary hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-md transition-all group">
                         <LogOut className="w-4 h-4 mr-3 group-hover:text-red-500 transition-colors" />
                         Sair do Sistema
                     </Link>
@@ -53,12 +57,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Top Header with Filters */}
                 <header className="h-16 bg-surface/80 backdrop-blur-md border-b border-border-color flex items-center justify-between px-6 z-10 sticky top-0 shadow-sm">
                     <div className="flex items-center gap-6">
-                        <h2 className="text-lg font-semibold text-white tracking-tight">Dashboard Geral</h2>
+                        <h2 className="text-lg font-semibold text-foreground tracking-tight">Dashboard Geral</h2>
                         <span className="h-5 w-[1px] bg-border-color"></span>
                         {/* Global Filters Mockup */}
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <select className="appearance-none bg-surface-highlight border border-border-color text-xs font-medium rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary text-gray-300 cursor-pointer hover:border-primary/50 transition-colors">
+                                <select className="appearance-none bg-surface-highlight border border-border-color text-xs font-medium rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary text-gray-500 dark:text-gray-300 cursor-pointer hover:border-primary/50 transition-colors">
                                     <option>Todas Empresas</option>
                                     <option>Matriz - SP</option>
                                     <option>Filial - MG</option>
@@ -67,7 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
 
                             <div className="relative">
-                                <select className="appearance-none bg-surface-highlight border border-border-color text-xs font-medium rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary text-gray-300 cursor-pointer hover:border-primary/50 transition-colors">
+                                <select className="appearance-none bg-surface-highlight border border-border-color text-xs font-medium rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary text-gray-500 dark:text-gray-300 cursor-pointer hover:border-primary/50 transition-colors">
                                     <option>Últimos 30 dias</option>
                                     <option>Janeiro 2026</option>
                                     <option>Hoje</option>
@@ -78,11 +82,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <ModeToggle />
                         <div className="flex flex-col items-end mr-2 hidden md:block">
-                            <span className="text-sm font-bold text-white leading-none">João Silva</span>
+                            <span className="text-sm font-bold text-foreground leading-none">João Silva</span>
                             <span className="text-[10px] text-primary font-medium tracking-wide">GESTOR DE FROTA</span>
                         </div>
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-orange-700 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-orange-500/20 border border-white/10">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-green-700 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-green-500/20 border border-white/10">
                             JS
                         </div>
                     </div>
@@ -102,9 +107,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
 function NavItem({ href, icon: Icon, label, active }: any) {
     return (
-        <Link href={href} className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all group relative overflow-hidden mb-1 ${active ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'text-gray-400 hover:text-white hover:bg-surface-highlight'}`}>
-            {active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_var(--primary)]" />}
-            <Icon className={`w-4 h-4 mr-3 ${active ? 'text-primary' : 'text-gray-500 group-hover:text-white'} transition-colors`} />
+        <Link href={href} className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors mb-0.5 ${active ? 'bg-primary/10 text-primary font-bold' : 'text-gray-600 dark:text-gray-400 hover:text-foreground hover:bg-surface-highlight'}`}>
+            <Icon className={`w-4 h-4 mr-3 ${active ? 'text-primary' : 'text-gray-400 group-hover:text-foreground'} transition-colors`} />
             {label}
         </Link>
     )
