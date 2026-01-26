@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, Users, Database, Settings, Plus, X, Check, Save, AlertTriangle } from 'lucide-react'
+import { Building2, Users, Database, Settings, Plus, X, Check, Save, AlertTriangle, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { createEmpresa, createUsuario, createUnidade, updateSystemParam, toggleUsuarioStatus } from '@/app/actions/admin-actions'
 
 interface Veiculo {
@@ -54,18 +54,21 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
     const [showModal, setShowModal] = useState<string | null>(null) // 'user', 'company', 'unit'
     const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null)
 
+    // Simulação de verificação de permissão (Em um cenário real, viria do useSession ou similar)
+    const isAdmin = true; // TODO: Integrar com auth real
+
     const handleNewUnit = (empresaId: string) => {
         setSelectedEmpresaId(empresaId)
         setShowModal('unit')
     }
 
     return (
-        <div className="flex h-[calc(100vh-120px)] bg-surface border border-border-color rounded-xl overflow-hidden shadow-sm">
+        <div className="flex h-[calc(100vh-100px)] w-full bg-surface border border-border-color rounded-xl overflow-hidden shadow-lg">
             {/* Sidebar */}
-            <div className="w-72 border-r border-border-color bg-surface-highlight/5 flex flex-col">
-                <div className="p-6">
-                    <h2 className="text-xl font-bold text-foreground">Configurações</h2>
-                    <p className="text-sm text-gray-500 mt-1">Gestão global do sistema</p>
+            <div className="w-72 border-r border-border-color bg-gray-50/50 dark:bg-surface-highlight/5 flex flex-col shrink-0">
+                <div className="p-8">
+                    <h2 className="text-xl font-bold text-foreground tracking-tight">Painel Admin</h2>
+                    <p className="text-xs text-gray-500 mt-1">Gestão e Governança</p>
                 </div>
                 <nav className="flex-1 px-4 space-y-1">
                     <NavButton active={activeTab === 'database'} onClick={() => setActiveTab('database')} icon={Database} label="Base de Dados" description="Frota e Ativos" />
@@ -84,11 +87,11 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
             </div>
 
             {/* Conteúdo */}
-            <div className="flex-1 overflow-auto bg-surface p-10 relative">
-                {activeTab === 'database' && <DatabaseSection veiculos={veiculos} />}
-                {activeTab === 'users' && <UsersSection usuarios={usuarios} onNew={() => setShowModal('user')} />}
-                {activeTab === 'company' && <CompanySection empresas={empresas} onNew={() => setShowModal('company')} onNewUnit={handleNewUnit} />}
-                {activeTab === 'system' && <SystemSection params={systemParams} />}
+            <div className="flex-1 overflow-auto bg-surface p-12 relative">
+                {activeTab === 'database' && <DatabaseSection veiculos={veiculos} isAdmin={isAdmin} />}
+                {activeTab === 'users' && <UsersSection usuarios={usuarios} onNew={() => setShowModal('user')} isAdmin={isAdmin} />}
+                {activeTab === 'company' && <CompanySection empresas={empresas} onNew={() => setShowModal('company')} onNewUnit={handleNewUnit} isAdmin={isAdmin} />}
+                {activeTab === 'system' && <SystemSection params={systemParams} isAdmin={isAdmin} />}
             </div>
 
             {/* Modais */}
@@ -177,42 +180,58 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
     )
 }
 
-function DatabaseSection({ veiculos }: { veiculos: Veiculo[] }) {
+function DatabaseSection({ veiculos, isAdmin }: { veiculos: Veiculo[], isAdmin: boolean }) {
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end border-b border-border-color pb-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
+            <div className="flex justify-between items-center bg-white dark:bg-surface p-6 rounded-2xl border border-border-color shadow-sm">
                 <div>
-                    <h3 className="text-3xl font-bold text-foreground">Base de Dados</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Visão geral dos ativos cadastrados.</p>
+                    <h3 className="text-2xl font-bold text-foreground">Frota e Ativos</h3>
+                    <p className="text-gray-500 text-sm mt-0.5 font-medium">Listagem técnica de todos os veículos operacionais.</p>
                 </div>
-                <div className="bg-surface-highlight px-4 py-2 rounded-lg border border-border-color text-sm">
-                    Total: <span className="font-bold text-foreground">{veiculos.length}</span> veículos
+                <div className="flex gap-3 items-center">
+                    <div className="bg-gray-100 dark:bg-surface-highlight px-4 py-2 rounded-lg text-sm font-bold text-gray-600">
+                        {veiculos.length} Veículos
+                    </div>
+                    {isAdmin && (
+                        <button className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-600 transition-colors">
+                            <Plus className="w-4 h-4" /> Novo Ativo
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className="bg-surface border border-border-color rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-surface border border-border-color rounded-2xl overflow-hidden shadow-sm">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-surface-highlight text-gray-500 font-medium">
+                    <thead className="bg-gray-50 dark:bg-surface-highlight/50 text-gray-400 font-bold uppercase text-[11px] tracking-wider border-b border-border-color">
                         <tr>
-                            <th className="px-6 py-4">Código</th>
-                            <th className="px-6 py-4">Modelo / Fabricante</th>
+                            <th className="px-6 py-4">Cód. Interno</th>
+                            <th className="px-6 py-4">Modelo</th>
                             <th className="px-6 py-4">Placa</th>
                             <th className="px-6 py-4">Unidade</th>
                             <th className="px-6 py-4">Status</th>
+                            {isAdmin && <th className="px-6 py-4 text-right">Ações</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-color">
                         {veiculos.map((v) => (
-                            <tr key={v.id} className="hover:bg-surface-highlight/50 transition-colors">
+                            <tr key={v.id} className="hover:bg-gray-50/50 dark:hover:bg-surface-highlight/30 transition-colors group">
                                 <td className="px-6 py-4 font-bold text-primary">{v.codigoInterno}</td>
-                                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{v.modelo}</td>
-                                <td className="px-6 py-4"><span className="font-mono bg-surface-highlight px-2 py-1 rounded border border-border-color/50">{v.placa || '-'}</span></td>
-                                <td className="px-6 py-4 text-gray-500">{v.unidade?.nomeUnidade || 'N/A'}</td>
+                                <td className="px-6 py-4 font-medium text-foreground">{v.modelo}</td>
+                                <td className="px-6 py-4 font-mono text-gray-500">{v.placa || '-'}</td>
+                                <td className="px-6 py-4 text-gray-500">{v.unidade?.nomeUnidade || 'Não alocado'}</td>
                                 <td className="px-6 py-4">
-                                    <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${v.status === 'DISPONIVEL' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${v.status === 'DISPONIVEL' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
                                         {v.status}
                                     </span>
                                 </td>
+                                {isAdmin && (
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex justify-end gap-1">
+                                            <button className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"><Edit className="w-4 h-4" /></button>
+                                            <button className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
@@ -222,67 +241,79 @@ function DatabaseSection({ veiculos }: { veiculos: Veiculo[] }) {
     )
 }
 
-function UsersSection({ usuarios, onNew }: { usuarios: Usuario[], onNew: () => void }) {
+function UsersSection({ usuarios, onNew, isAdmin }: { usuarios: Usuario[], onNew: () => void, isAdmin: boolean }) {
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex justify-between items-end border-b border-border-color pb-6">
                 <div>
-                    <h3 className="text-3xl font-bold text-foreground">Usuários</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie quem tem acesso ao sistema e seus níveis.</p>
+                    <h3 className="text-3xl font-black text-foreground">Usuários & Acesso</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">Controle de credenciais e níveis de permissão.</p>
                 </div>
-                <button onClick={onNew} className="bg-primary hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95">
-                    <Plus className="w-5 h-5" /> Adicionar Usuário
-                </button>
+                {isAdmin && (
+                    <button onClick={onNew} className="bg-primary hover:bg-orange-600 text-white px-8 py-3 rounded-xl text-sm font-black flex items-center gap-2 shadow-xl shadow-orange-500/20 transition-all active:scale-95">
+                        <Plus className="w-5 h-5" /> Novo Usuário
+                    </button>
+                )}
             </div>
 
-            <div className="bg-surface border border-border-color rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-surface border border-border-color rounded-2xl overflow-hidden shadow-sm border-t-4 border-t-primary">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-surface-highlight text-gray-500 font-medium border-b border-border-color">
+                    <thead className="bg-surface-highlight/50 text-gray-500 font-bold uppercase text-[10px] tracking-widest border-b border-border-color">
                         <tr>
-                            <th className="px-6 py-4">Usuário</th>
-                            <th className="px-6 py-4">Perfil</th>
-                            <th className="px-6 py-4">Empresa Padrão</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4 text-right">Ações</th>
+                            <th className="px-8 py-5">Colaborador</th>
+                            <th className="px-8 py-5">Perfil</th>
+                            <th className="px-8 py-5">Unidade / Empresa</th>
+                            <th className="px-8 py-5">Status</th>
+                            {isAdmin && <th className="px-8 py-5 text-right">Gerenciamento</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-color">
                         {usuarios.map((u) => (
-                            <tr key={u.id} className="hover:bg-surface-highlight/50 transition-colors group">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 text-white flex items-center justify-center font-bold">
-                                            {u.nome.charAt(0)}
+                            <tr key={u.id} className="hover:bg-surface-highlight/30 transition-all group">
+                                <td className="px-8 py-5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center font-black text-lg shadow-md border-2 border-white/20">
+                                            {u.nome.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-foreground">{u.nome}</p>
-                                            <p className="text-xs text-gray-500">{u.email}</p>
+                                            <p className="font-bold text-foreground text-base leading-tight">{u.nome}</p>
+                                            <p className="text-xs text-gray-500 font-medium mt-1">{u.email}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 font-mono text-xs font-bold dark:bg-blue-900/30 dark:text-blue-300">
+                                <td className="px-8 py-5">
+                                    <span className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-mono text-[10px] font-black border border-blue-500/20">
                                         {u.perfil}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-gray-500 text-sm">
-                                    {u.empresaPadrao?.nomeFantasia || '-'}
+                                <td className="px-8 py-5 text-gray-500 font-semibold text-sm">
+                                    {u.empresaPadrao?.nomeFantasia || 'NÃO VINCULADO'}
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        {u.ativo ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-500" />}
-                                        <span className={`text-sm ${u.ativo ? 'text-green-600' : 'text-red-500'}`}>{u.ativo ? 'Ativo' : 'Inativo'}</span>
+                                <td className="px-8 py-5">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className={`w-2.5 h-2.5 rounded-full ${u.ativo ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`} />
+                                        <span className={`text-[11px] font-black uppercase ${u.ativo ? 'text-green-600' : 'text-red-500'}`}>{u.ativo ? 'Ativo' : 'Inativo'}</span>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <form action={async (formData) => {
-                                        await toggleUsuarioStatus(u.id, u.ativo, formData)
-                                    }}>
-                                        <button className={`p-2 rounded-lg transition-colors ${u.ativo ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}>
-                                            {u.ativo ? 'Desativar' : 'Ativar'}
-                                        </button>
-                                    </form>
-                                </td>
+                                {isAdmin && (
+                                    <td className="px-8 py-5 text-right">
+                                        <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                                            <button title="Editar dados" className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors border border-transparent hover:border-primary/20">
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <form action={async (formData) => {
+                                                await toggleUsuarioStatus(u.id, u.ativo, formData)
+                                            }}>
+                                                <button title={u.ativo ? "Desativar" : "Ativar"} className={`p-2 rounded-lg border transition-all ${u.ativo ? 'text-orange-500 border-orange-200 hover:bg-orange-50' : 'text-green-500 border-green-200 hover:bg-green-50'}`}>
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                            </form>
+                                            <button title="Excluir Permanentemente" className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors border border-transparent hover:border-red-500/20">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
@@ -292,59 +323,73 @@ function UsersSection({ usuarios, onNew }: { usuarios: Usuario[], onNew: () => v
     )
 }
 
-function CompanySection({ empresas, onNew, onNewUnit }: { empresas: Empresa[], onNew: () => void, onNewUnit: (id: string) => void }) {
+function CompanySection({ empresas, onNew, onNewUnit, isAdmin }: { empresas: Empresa[], onNew: () => void, onNewUnit: (id: string) => void, isAdmin: boolean }) {
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end border-b border-border-color pb-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
+            <div className="flex justify-between items-center bg-white dark:bg-surface p-6 rounded-2xl border border-border-color shadow-sm">
                 <div>
-                    <h3 className="text-3xl font-bold text-foreground">Empresas & Filiais</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Estrutura organizacional multi-empresa.</p>
+                    <h3 className="text-2xl font-bold text-foreground">Estrutura de Empresas</h3>
+                    <p className="text-gray-500 text-sm mt-0.5 font-medium">Gestão de matriz e unidades operacionais vinculadas.</p>
                 </div>
-                <button onClick={onNew} className="bg-primary hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95">
-                    <Plus className="w-5 h-5" /> Nova Empresa
-                </button>
+                {isAdmin && (
+                    <button onClick={onNew} className="bg-primary hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
+                        <Plus className="w-4 h-4" /> Nova Empresa
+                    </button>
+                )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-6">
                 {empresas.map((e) => (
-                    <div key={e.id} className="border border-border-color rounded-xl overflow-hidden bg-surface shadow-sm hover:shadow-md transition-shadow">
-                        <div className="bg-surface-highlight/30 p-6 border-b border-border-color flex justify-between items-start">
+                    <div key={e.id} className="bg-white dark:bg-surface border border-border-color rounded-2xl shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between p-6 border-b border-border-color">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-surface border border-border-color rounded-lg">
-                                    <Building2 className="w-8 h-8 text-gray-400" />
+                                <div className="p-3 bg-gray-50 dark:bg-surface-highlight border border-border-color rounded-xl">
+                                    <Building2 className="w-6 h-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-xl text-foreground flex items-center gap-2">
+                                    <h4 className="font-bold text-lg text-foreground flex items-center gap-2">
                                         {e.nomeFantasia}
-                                        <span className="text-[10px] uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold tracking-wide">Matriz</span>
+                                        <span className="text-[10px] bg-green-50 text-green-700 px-2 rounded border border-green-200 font-bold uppercase tracking-tight">Matriz</span>
                                     </h4>
-                                    <p className="text-sm text-gray-500 font-mono mt-1">{e.cnpj}</p>
+                                    <p className="text-xs text-gray-400 font-medium">CNPJ: {e.cnpj} • {e.unidades.length} Unidades</p>
                                 </div>
                             </div>
-                            <button onClick={() => onNewUnit(e.id)} className="text-sm border border-border-color  bg-surface hover:bg-surface-highlight text-foreground px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors">
-                                <Plus className="w-4 h-4" /> Adicionar Unidade/Filial
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {isAdmin && (
+                                    <div className="flex gap-1 mr-4 border-r border-border-color pr-4">
+                                        <button className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"><Edit className="w-4 h-4" /></button>
+                                        <button className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                    </div>
+                                )}
+                                <button onClick={() => onNewUnit(e.id)} className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                    <Plus className="w-3 h-3" /> Adicionar Filial
+                                </button>
+                            </div>
                         </div>
-                        <div className="p-6">
-                            <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <Database className="w-3 h-3" />
-                                Unidades Operacionais Vinculadas
-                            </h5>
-                            {e.unidades.length > 0 ? (
-                                <div className="grid grid-cols-1 md::grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {e.unidades.map((u) => (
-                                        <div key={u.id} className="p-4 border border-border-color rounded-lg text-sm flex items-start gap-3 bg-surface-highlight/10 hover:border-primary/30 transition-colors group cursor-default">
-                                            <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0 group-hover:shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-shadow"></div>
-                                            <div>
-                                                <p className="font-bold text-foreground">{u.nomeUnidade}</p>
-                                                <span className="text-gray-500 text-xs">{u.cidade} - {u.estado}</span>
+                        <div className="p-6 bg-gray-50/30 dark:bg-surface-highlight/10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {e.unidades.length > 0 ? e.unidades.map((u) => (
+                                    <div key={u.id} className="bg-white dark:bg-surface p-4 rounded-xl border border-border-color group hover:border-primary/50 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                <p className="font-bold text-foreground text-sm tracking-tight">{u.nomeUnidade}</p>
                                             </div>
+                                            {isAdmin && (
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button className="p-1 text-gray-400 hover:text-blue-500"><Edit className="w-3.5 h-3.5" /></button>
+                                                    <button className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                </div>
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500 italic">Nenhuma filial cadastrada.</p>
-                            )}
+                                        <p className="text-[11px] text-gray-400 font-medium mt-1 uppercase tracking-tight ml-4">{u.cidade} - {u.estado}</p>
+                                    </div>
+                                )) : (
+                                    <div className="col-span-full py-4 text-center">
+                                        <p className="text-xs text-gray-400 font-medium italic">Nenhuma filial cadastrada nesta estrutura.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -353,46 +398,62 @@ function CompanySection({ empresas, onNew, onNewUnit }: { empresas: Empresa[], o
     )
 }
 
-function SystemSection({ params }: { params: SystemParam[] }) {
+function SystemSection({ params, isAdmin }: { params: SystemParam[], isAdmin: boolean }) {
     // Group params
     const groups = Array.from(new Set(params.map(p => p.group)))
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto">
-            <div className="text-center mb-10">
-                <div className="w-16 h-16 bg-surface-highlight rounded-full flex items-center justify-center mx-auto mb-4 border border-border-color">
-                    <Settings className="w-8 h-8 text-gray-400" />
+        <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+                <div className="w-24 h-24 bg-surface-highlight rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-border-color shadow-xl rotate-3">
+                    <Settings className="w-12 h-12 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Parâmetros do Sistema</h3>
-                <p className="text-gray-500 max-w-lg mx-auto mt-2 text-sm">
-                    Ajuste o comportamento global da plataforma. Estas configurações afetam todos os usuários e módulos.
+                <h3 className="text-4xl font-black text-foreground tracking-tight">Parâmetros Mestre</h3>
+                <p className="text-gray-500 max-w-2xl mx-auto mt-4 text-base font-medium leading-relaxed">
+                    Configurações de infraestrutura e lógica computacional global. Ajustes aqui alteram o comportamento fundamental da plataforma.
                 </p>
+                {!isAdmin && (
+                    <div className="mt-6 flex justify-center">
+                        <span className="bg-red-500/10 text-red-600 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-red-500/20">
+                            Apenas Leitura • Perfil Restrito
+                        </span>
+                    </div>
+                )}
             </div>
 
             {groups.map(group => (
-                <div key={group} className="border border-border-color rounded-xl overflow-hidden bg-surface shadow-sm">
-                    <div className="bg-surface-highlight/30 px-6 py-3 border-b border-border-color">
-                        <h4 className="font-bold text-sm text-gray-500 uppercase tracking-wider">{group}</h4>
+                <div key={group} className="border border-border-color rounded-[2.5rem] overflow-hidden bg-surface shadow-xl border-t-[12px] border-t-primary">
+                    <div className="bg-surface-highlight/30 px-10 py-6 border-b border-border-color flex justify-between items-center">
+                        <h4 className="font-black text-sm text-gray-400 uppercase tracking-[0.3em]">{group} CONTROL GROUP</h4>
+                        <Database className="w-5 h-5 text-gray-300" />
                     </div>
                     <div className="divide-y divide-border-color">
                         {params.filter(p => p.group === group).map(param => (
                             <form key={param.id} action={async (formData) => {
-                                await updateSystemParam(formData)
-                            }} className="p-6 flex items-center justify-between gap-8 hover:bg-surface-highlight/5 transition-colors">
+                                if (isAdmin) await updateSystemParam(formData)
+                            }} className="p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-10 hover:bg-surface-highlight/10 transition-all group/param">
                                 <input type="hidden" name="key" value={param.key} />
                                 <div className="flex-1">
-                                    <p className="font-bold text-foreground mb-1">{param.description || param.key}</p>
-                                    <p className="text-xs text-gray-400 font-mono">{param.key}</p>
+                                    <p className="font-black text-xl text-foreground mb-1 tracking-tight group-hover/param:text-primary transition-colors">{param.description || param.key}</p>
+                                    <p className="text-[10px] text-gray-400 font-black font-mono tracking-widest bg-surface-highlight inline-block px-2 py-0.5 rounded uppercase">{param.key}</p>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 w-full md:w-auto">
                                     <input
                                         name="value"
+                                        readOnly={!isAdmin}
                                         defaultValue={param.value}
-                                        className="bg-surface border border-border-color rounded px-3 py-1.5 text-sm w-48 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right font-mono text-gray-600"
+                                        className={`bg-surface-highlight border-2 border-border-color rounded-2xl px-6 py-4 text-base w-full md:w-64 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none text-right font-black text-foreground shadow-inner transition-all ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     />
-                                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                        <Save className="w-4 h-4" />
-                                    </button>
+                                    {isAdmin && (
+                                        <div className="flex gap-2">
+                                            <button title="Salvar Alteração" className="p-4 bg-primary text-white hover:bg-orange-600 rounded-2xl shadow-lg shadow-orange-500/20 transition-all hover:scale-110 active:scale-90">
+                                                <Save className="w-6 h-6" />
+                                            </button>
+                                            <button type="button" title="Redefinir" className="p-4 text-gray-400 hover:text-red-500 rounded-2xl transition-all">
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </form>
                         ))}
@@ -407,19 +468,19 @@ function NavButton({ active, onClick, icon: Icon, label, description }: { active
     return (
         <button
             onClick={onClick}
-            className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${active
-                ? 'bg-surface shadow border border-primary/20'
-                : 'hover:bg-surface-highlight/50 border border-transparent'
+            className={`w-full text-left px-5 py-4 rounded-xl transition-all duration-200 group relative overflow-hidden ${active
+                ? 'bg-white dark:bg-surface shadow-md border border-primary/20'
+                : 'hover:bg-gray-100 dark:hover:bg-surface-highlight/30 border border-transparent'
                 }`}
         >
             {active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
             <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-lg transition-colors ${active ? 'bg-primary text-white' : 'bg-surface-highlight text-gray-400 group-hover:text-foreground'}`}>
+                <div className={`p-2.5 rounded-lg transition-colors ${active ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-surface-highlight text-gray-400 group-hover:text-primary'}`}>
                     <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                    <p className={`text-sm font-bold ${active ? 'text-foreground' : 'text-gray-600 group-hover:text-foreground'}`}>{label}</p>
-                    <p className="text-[10px] text-gray-400">{description}</p>
+                    <p className={`text-xs font-bold uppercase tracking-wide ${active ? 'text-foreground' : 'text-gray-500 group-hover:text-foreground'}`}>{label}</p>
+                    <p className="text-[10px] text-gray-400 font-medium group-hover:text-gray-500">{description}</p>
                 </div>
             </div>
         </button>
