@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { LayoutDashboard, Wrench, Shield, Package, DollarSign, Users, Truck, Settings, LogOut, ChevronDown, Disc, MapPin, CalendarClock, ListTodo } from 'lucide-react'
+import { LayoutDashboard, Wrench, Shield, Package, DollarSign, Users, Settings, LogOut, ChevronDown, Disc, MapPin, CalendarClock, ListTodo } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { ModeToggle } from '@/components/ui/mode-toggle'
@@ -94,18 +94,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </header>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-auto p-6 scroll-smooth custom-scrollbar relative">
+                <div className={`flex-1 overflow-auto ${pathname?.startsWith('/dashboard/admin') ? '' : 'p-6'} scroll-smooth custom-scrollbar relative`}>
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none -z-10" />
-                    <div className="max-w-7xl mx-auto space-y-6">
-                        {children}
-                    </div>
+                    {pathname?.startsWith('/dashboard/admin') ? (
+                        children
+                    ) : (
+                        <div className="max-w-7xl mx-auto space-y-6">
+                            {children}
+                        </div>
+                    )}
                 </div>
             </main>
         </div>
     )
 }
 
-function NavItem({ href, icon: Icon, label, active }: any) {
+interface NavItemProps {
+    href: string;
+    icon: React.ElementType;
+    label: string;
+    active: boolean;
+}
+
+function NavItem({ href, icon: Icon, label, active }: NavItemProps) {
     return (
         <Link href={href} className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors mb-0.5 ${active ? 'bg-primary/10 text-primary font-bold' : 'text-gray-600 dark:text-gray-400 hover:text-foreground hover:bg-surface-highlight'}`}>
             <Icon className={`w-4 h-4 mr-3 ${active ? 'text-primary' : 'text-gray-400 group-hover:text-foreground'} transition-colors`} />

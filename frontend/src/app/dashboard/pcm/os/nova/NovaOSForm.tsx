@@ -5,7 +5,14 @@ import { ArrowLeft, Calendar, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
-export default function NovaOSForm({ veiculos }: { veiculos: any[] }) {
+interface VeiculoDropdown {
+    id: string;
+    codigoInterno: string;
+    modelo: string;
+    placa: string | null;
+}
+
+export default function NovaOSForm({ veiculos }: { veiculos: VeiculoDropdown[] }) {
     const [enviadoReserva, setEnviadoReserva] = useState(false)
 
     return (

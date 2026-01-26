@@ -24,17 +24,17 @@ export async function getDashboardMetrics() {
 
         // 2. Calculate KPI Counts
         const totalOS = osList.length
-        const osAbertas = osList.filter(os => ['ABERTA', 'EM_ANDAMENTO', 'AGUARDANDO_PECA'].includes(os.status)).length
-        const osFechadas = osList.filter(os => os.status === 'CONCLUIDA' || os.status === 'FECHADA').length // Adjusted status checks to common patterns
+        const osAbertas = osList.filter(os => ['ABERTA', 'PLANEJADA', 'EM_EXECUCAO'].includes(os.status)).length
+        const osFechadas = osList.filter(os => os.status === 'CONCLUIDA').length
 
         // 3. Calculate Availability per Vehicle (Simplified Logic)
         const veiculos = await prisma.veiculo.findMany({
             where: { status: { not: 'DESATIVADO' } },
             include: {
-                ordensServico: {
+                os: {
                     where: {
                         dataAbertura: { gte: firstDay },
-                        status: { in: ['CONCLUIDA', 'FECHADA', 'EM_ANDAMENTO'] } // Consider open maintenance too? Usually yes for availability
+                        status: { in: ['CONCLUIDA', 'EM_EXECUCAO'] }
                     }
                 }
             }
@@ -45,10 +45,9 @@ export async function getDashboardMetrics() {
         const availabilityData = veiculos.map(v => {
             let totalDowntimeHours = 0
 
-            v.ordensServico.forEach(os => {
+            v.os.forEach(os => {
                 const start = new Date(os.dataAbertura)
-                // If closed, use closing date. If Open, use NOW.
-                const end = os.dataFechamento ? new Date(os.dataFechamento) : now
+                const end = os.dataConclusao ? new Date(os.dataConclusao) : now
 
                 // Clamp end to now to avoid future downtime calculation issues
                 const actualEnd = min([end, now])
@@ -76,11 +75,11 @@ export async function getDashboardMetrics() {
             : 100
 
         // 5. Calculate MTTR (Mean Time To Repair) - Only CLOSED OS
-        const closedOS = osList.filter(os => os.dataFechamento)
+        const closedOS = osList.filter(os => os.dataConclusao)
         let totalRepairHours = 0
         closedOS.forEach(os => {
-            if (os.dataFechamento) {
-                totalRepairHours += differenceInHours(new Date(os.dataFechamento), new Date(os.dataAbertura))
+            if (os.dataConclusao) {
+                totalRepairHours += differenceInHours(new Date(os.dataConclusao), new Date(os.dataAbertura))
             }
         })
         const mttr = closedOS.length > 0 ? (totalRepairHours / closedOS.length).toFixed(1) : '0.0'
@@ -101,8 +100,7 @@ export async function getDashboardMetrics() {
             }
         }
 
-    } catch (error) {
-        console.error('Error fetching dashboard metrics:', error)
+    } catch (_) {
         return { success: false, error: 'Failed to fetch metrics' }
     }
 }

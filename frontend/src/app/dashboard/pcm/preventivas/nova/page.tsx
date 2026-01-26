@@ -5,8 +5,16 @@ import { createPreventiva, getVeiculosSimples } from '@/app/actions/preventiva-a
 import { ArrowLeft, Save, Calendar, Clock, Settings, Wrench } from 'lucide-react'
 import Link from 'next/link'
 
+interface VeiculoSimple {
+    id: string;
+    modelo: string;
+    placa: string | null;
+    codigoInterno: string;
+    horimetroAtual: number;
+}
+
 export default function NovaPreventivaPage() {
-    const [veiculos, setVeiculos] = useState<any[]>([])
+    const [veiculos, setVeiculos] = useState<VeiculoSimple[]>([])
     const [selectedVeiculo, setSelectedVeiculo] = useState<string>('')
     const [horimetroAtual, setHorimetroAtual] = useState<number>(0)
     const [loading, setLoading] = useState(false)

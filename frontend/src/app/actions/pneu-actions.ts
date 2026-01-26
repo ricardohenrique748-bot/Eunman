@@ -31,8 +31,7 @@ export async function createPneu(formData: FormData) {
             }
         })
         return { success: true }
-    } catch (error) {
-        console.error(error)
+    } catch (_) {
         return { success: false, error: 'Erro ao cadastrar pneu' }
     }
 }

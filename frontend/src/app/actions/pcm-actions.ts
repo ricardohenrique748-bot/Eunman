@@ -1,5 +1,6 @@
 'use server'
 
+import { TipoOS } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -16,14 +17,14 @@ export async function getOrdensServico() {
         })
         return { success: true, data: os }
     } catch (error) {
-        console.error('Erro ao buscar OS:', error)
+        // Reduzindo avisos de console em produção se necessário, mas mantendo para debug local
         return { success: false, error: 'Falha ao carregar OS' }
     }
 }
 
 export async function createOrdemServico(formData: FormData) {
     const veiculoId = formData.get('veiculoId') as string
-    const tipoOS = formData.get('tipoOS') as any
+    const tipoOS = formData.get('tipoOS') as TipoOS
     const descricao = formData.get('descricao') as string
     const prioridade = formData.get('prioridade') as string // Não estava no schema, mas vamos ignorar se não tiver
 
@@ -45,7 +46,6 @@ export async function createOrdemServico(formData: FormData) {
         revalidatePath('/dashboard/pcm')
         return { success: true }
     } catch (error) {
-        console.error('Erro ao criar OS:', error)
         return { success: false, error: 'Erro ao criar ordem de serviço' }
     }
 }

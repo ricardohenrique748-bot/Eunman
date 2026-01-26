@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, Users, Database, Settings, Plus, X, Check, Save, AlertTriangle, Edit, Trash2, MoreVertical } from 'lucide-react'
-import { createEmpresa, createUsuario, createUnidade, updateSystemParam, toggleUsuarioStatus } from '@/app/actions/admin-actions'
+import { Building2, Users, Database, Settings, Plus, X, Check, Save, AlertTriangle, Edit, Trash2 } from 'lucide-react'
+import { createEmpresa, createUsuario, createUnidade, updateSystemParam, toggleUsuarioStatus, deleteUsuario, deleteVeiculo, deleteEmpresa, deleteUnidade, updateUsuario, updateVeiculo, updateEmpresa, updateUnidade } from '@/app/actions/admin-actions'
 
 interface Veiculo {
     id: string
@@ -53,22 +53,37 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
     const [activeTab, setActiveTab] = useState('database')
     const [showModal, setShowModal] = useState<string | null>(null) // 'user', 'company', 'unit'
     const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null)
+    const [editItem, setEditItem] = useState<
+        | { type: 'vehicle', data: Veiculo }
+        | { type: 'user', data: Usuario }
+        | { type: 'company', data: Empresa }
+        | { type: 'unit', data: Unidade }
+        | null
+    >(null)
 
-    // Simulação de verificação de permissão (Em um cenário real, viria do useSession ou similar)
-    const isAdmin = true; // TODO: Integrar com auth real
+    const isAdmin = true;
 
     const handleNewUnit = (empresaId: string) => {
         setSelectedEmpresaId(empresaId)
         setShowModal('unit')
     }
 
+    const handleDelete = async (type: string, id: string) => {
+        if (!confirm('Deseja realmente excluir este item? Esta ação não pode ser desfeita.')) return
+
+        if (type === 'vehicle') await deleteVeiculo(id)
+        if (type === 'user') await deleteUsuario(id)
+        if (type === 'company') await deleteEmpresa(id)
+        if (type === 'unit') await deleteUnidade(id)
+    }
+
     return (
-        <div className="flex h-[calc(100vh-100px)] w-full bg-surface border border-border-color rounded-xl overflow-hidden shadow-lg">
+        <div className="flex h-full w-full bg-[#f9fafb] overflow-hidden">
             {/* Sidebar */}
-            <div className="w-72 border-r border-border-color bg-gray-50/50 dark:bg-surface-highlight/5 flex flex-col shrink-0">
+            <div className="w-72 border-r border-border-color bg-white flex flex-col shrink-0">
                 <div className="p-8">
                     <h2 className="text-xl font-bold text-foreground tracking-tight">Painel Admin</h2>
-                    <p className="text-xs text-gray-500 mt-1">Gestão e Governança</p>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Gestão e Governança</p>
                 </div>
                 <nav className="flex-1 px-4 space-y-1">
                     <NavButton active={activeTab === 'database'} onClick={() => setActiveTab('database')} icon={Database} label="Base de Dados" description="Frota e Ativos" />
@@ -87,15 +102,15 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
             </div>
 
             {/* Conteúdo */}
-            <div className="flex-1 overflow-auto bg-surface p-12 relative">
-                {activeTab === 'database' && <DatabaseSection veiculos={veiculos} isAdmin={isAdmin} />}
-                {activeTab === 'users' && <UsersSection usuarios={usuarios} onNew={() => setShowModal('user')} isAdmin={isAdmin} />}
-                {activeTab === 'company' && <CompanySection empresas={empresas} onNew={() => setShowModal('company')} onNewUnit={handleNewUnit} isAdmin={isAdmin} />}
+            <div className="flex-1 overflow-auto bg-[#f9fafb] p-10 relative">
+                {activeTab === 'database' && <DatabaseSection veiculos={veiculos} isAdmin={isAdmin} onDelete={handleDelete} onEdit={(type, data) => setEditItem({ type, data })} />}
+                {activeTab === 'users' && <UsersSection usuarios={usuarios} onNew={() => setShowModal('user')} isAdmin={isAdmin} onDelete={handleDelete} onEdit={(type, data) => setEditItem({ type, data })} />}
+                {activeTab === 'company' && <CompanySection empresas={empresas} onNew={() => setShowModal('company')} onNewUnit={handleNewUnit} isAdmin={isAdmin} onDelete={handleDelete} onEdit={(type, data) => setEditItem({ type: type as any, data: data as any })} />}
                 {activeTab === 'system' && <SystemSection params={systemParams} isAdmin={isAdmin} />}
             </div>
 
             {/* Modais */}
-            {showModal && (
+            {(showModal || editItem) && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="bg-surface border border-border-color p-8 rounded-xl shadow-2xl w-[500px]">
                         <div className="flex justify-between items-center mb-6">
@@ -103,10 +118,15 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
                                 {showModal === 'user' && 'Novo Usuário'}
                                 {showModal === 'company' && 'Nova Empresa'}
                                 {showModal === 'unit' && 'Nova Unidade Operacional'}
+                                {editItem?.type === 'vehicle' && 'Editar Veículo'}
+                                {editItem?.type === 'user' && 'Editar Usuário'}
+                                {editItem?.type === 'company' && 'Editar Empresa'}
+                                {editItem?.type === 'unit' && 'Editar Unidade'}
                             </h3>
-                            <button onClick={() => setShowModal(null)} className="text-gray-500 hover:text-foreground"><X className="w-5 h-5" /></button>
+                            <button onClick={() => { setShowModal(null); setEditItem(null); }} className="text-gray-500 hover:text-foreground"><X className="w-5 h-5" /></button>
                         </div>
 
+                        {/* Formulário de Criação (EXISTENTE) */}
                         {showModal === 'user' && (
                             <form action={async (formData) => {
                                 await createUsuario(formData)
@@ -173,6 +193,98 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
                                 <button className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">Criar Unidade</button>
                             </form>
                         )}
+
+                        {/* Formulário de EDIÇÃO */}
+                        {editItem?.type === 'vehicle' && (
+                            <form action={async (formData) => {
+                                await updateVeiculo(formData)
+                                setEditItem(null)
+                            }} className="space-y-5">
+                                <input type="hidden" name="id" value={editItem.data.id} />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Código Interno</label>
+                                    <input name="codigoInterno" defaultValue={editItem.data.codigoInterno} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Modelo</label>
+                                    <input name="modelo" defaultValue={editItem.data.modelo} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Placa</label>
+                                    <input name="placa" defaultValue={editItem.data.placa ?? ''} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <button className="w-full bg-primary text-white py-3 rounded-lg font-bold">Atualizar Veículo</button>
+                            </form>
+                        )}
+
+                        {editItem?.type === 'user' && (
+                            <form action={async (formData) => {
+                                await updateUsuario(formData)
+                                setEditItem(null)
+                            }} className="space-y-5">
+                                <input type="hidden" name="id" value={editItem.data.id} />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
+                                    <input name="nome" defaultValue={editItem.data.nome} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">E-mail</label>
+                                    <input name="email" type="email" defaultValue={editItem.data.email} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
+                                    <select name="perfil" defaultValue={editItem.data.perfil} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color">
+                                        <option value="OPERACIONAL">OPERACIONAL</option>
+                                        <option value="PCM">PCM</option>
+                                        <option value="GESTOR">GESTOR</option>
+                                        <option value="ADMIN">ADMIN</option>
+                                    </select>
+                                </div>
+                                <button className="w-full bg-primary text-white py-3 rounded-lg font-bold">Atualizar Usuário</button>
+                            </form>
+                        )}
+
+                        {editItem?.type === 'company' && (
+                            <form action={async (formData) => {
+                                await updateEmpresa(formData)
+                                setEditItem(null)
+                            }} className="space-y-5">
+                                <input type="hidden" name="id" value={editItem.data.id} />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome Fantasia</label>
+                                    <input name="nomeFantasia" defaultValue={editItem.data.nomeFantasia} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">CNPJ</label>
+                                    <input name="cnpj" defaultValue={editItem.data.cnpj} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <button className="w-full bg-primary text-white py-3 rounded-lg font-bold">Atualizar Empresa</button>
+                            </form>
+                        )}
+
+                        {editItem?.type === 'unit' && (
+                            <form action={async (formData) => {
+                                await updateUnidade(formData)
+                                setEditItem(null)
+                            }} className="space-y-5">
+                                <input type="hidden" name="id" value={editItem.data.id} />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome da Unidade</label>
+                                    <input name="nomeUnidade" defaultValue={editItem.data.nomeUnidade} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Cidade</label>
+                                        <input name="cidade" defaultValue={editItem.data.cidade} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">UF</label>
+                                        <input name="estado" defaultValue={editItem.data.estado} maxLength={2} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color uppercase" />
+                                    </div>
+                                </div>
+                                <button className="w-full bg-primary text-white py-3 rounded-lg font-bold">Atualizar Unidade</button>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
@@ -180,7 +292,7 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
     )
 }
 
-function DatabaseSection({ veiculos, isAdmin }: { veiculos: Veiculo[], isAdmin: boolean }) {
+function DatabaseSection({ veiculos, isAdmin, onDelete, onEdit }: { veiculos: Veiculo[], isAdmin: boolean, onDelete: (type: string, id: string) => void, onEdit: (type: 'vehicle', data: Veiculo) => void }) {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
             <div className="flex justify-between items-center bg-white dark:bg-surface p-6 rounded-2xl border border-border-color shadow-sm">
@@ -227,8 +339,8 @@ function DatabaseSection({ veiculos, isAdmin }: { veiculos: Veiculo[], isAdmin: 
                                 {isAdmin && (
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-1">
-                                            <button className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"><Edit className="w-4 h-4" /></button>
-                                            <button className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={() => onEdit('vehicle', v)} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"><Edit className="w-4 h-4" /></button>
+                                            <button onClick={() => onDelete('vehicle', v.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </td>
                                 )}
@@ -241,7 +353,7 @@ function DatabaseSection({ veiculos, isAdmin }: { veiculos: Veiculo[], isAdmin: 
     )
 }
 
-function UsersSection({ usuarios, onNew, isAdmin }: { usuarios: Usuario[], onNew: () => void, isAdmin: boolean }) {
+function UsersSection({ usuarios, onNew, isAdmin, onDelete, onEdit }: { usuarios: Usuario[], onNew: () => void, isAdmin: boolean, onDelete: (type: string, id: string) => void, onEdit: (type: 'user', data: Usuario) => void }) {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex justify-between items-end border-b border-border-color pb-6">
@@ -298,7 +410,7 @@ function UsersSection({ usuarios, onNew, isAdmin }: { usuarios: Usuario[], onNew
                                 {isAdmin && (
                                     <td className="px-8 py-5 text-right">
                                         <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
-                                            <button title="Editar dados" className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors border border-transparent hover:border-primary/20">
+                                            <button onClick={() => onEdit('user', u)} title="Editar dados" className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors border border-transparent hover:border-primary/20">
                                                 <Edit className="w-4 h-4" />
                                             </button>
                                             <form action={async (formData) => {
@@ -308,7 +420,7 @@ function UsersSection({ usuarios, onNew, isAdmin }: { usuarios: Usuario[], onNew
                                                     <Check className="w-4 h-4" />
                                                 </button>
                                             </form>
-                                            <button title="Excluir Permanentemente" className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors border border-transparent hover:border-red-500/20">
+                                            <button onClick={() => onDelete('user', u.id)} title="Excluir Permanentemente" className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors border border-transparent hover:border-red-500/20">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -323,7 +435,7 @@ function UsersSection({ usuarios, onNew, isAdmin }: { usuarios: Usuario[], onNew
     )
 }
 
-function CompanySection({ empresas, onNew, onNewUnit, isAdmin }: { empresas: Empresa[], onNew: () => void, onNewUnit: (id: string) => void, isAdmin: boolean }) {
+function CompanySection({ empresas, onNew, onNewUnit, isAdmin, onDelete, onEdit }: { empresas: Empresa[], onNew: () => void, onNewUnit: (id: string) => void, isAdmin: boolean, onDelete: (type: string, id: string) => void, onEdit: (type: 'company' | 'unit', data: Empresa | Unidade) => void }) {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
             <div className="flex justify-between items-center bg-white dark:bg-surface p-6 rounded-2xl border border-border-color shadow-sm">
@@ -357,8 +469,8 @@ function CompanySection({ empresas, onNew, onNewUnit, isAdmin }: { empresas: Emp
                             <div className="flex items-center gap-2">
                                 {isAdmin && (
                                     <div className="flex gap-1 mr-4 border-r border-border-color pr-4">
-                                        <button className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"><Edit className="w-4 h-4" /></button>
-                                        <button className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                        <button onClick={() => onEdit('company', e)} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"><Edit className="w-4 h-4" /></button>
+                                        <button onClick={() => onDelete('company', e.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                                     </div>
                                 )}
                                 <button onClick={() => onNewUnit(e.id)} className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
@@ -377,8 +489,8 @@ function CompanySection({ empresas, onNew, onNewUnit, isAdmin }: { empresas: Emp
                                             </div>
                                             {isAdmin && (
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button className="p-1 text-gray-400 hover:text-blue-500"><Edit className="w-3.5 h-3.5" /></button>
-                                                    <button className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => onEdit('unit', u)} className="p-1 text-gray-400 hover:text-blue-500"><Edit className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => onDelete('unit', u.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
                                                 </div>
                                             )}
                                         </div>
@@ -403,7 +515,7 @@ function SystemSection({ params, isAdmin }: { params: SystemParam[], isAdmin: bo
     const groups = Array.from(new Set(params.map(p => p.group)))
 
     return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 max-w-6xl mx-auto">
+        <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="text-center mb-16">
                 <div className="w-24 h-24 bg-surface-highlight rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-border-color shadow-xl rotate-3">
                     <Settings className="w-12 h-12 text-primary" />

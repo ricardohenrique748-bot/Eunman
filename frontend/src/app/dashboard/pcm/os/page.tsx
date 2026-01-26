@@ -1,6 +1,9 @@
 import { Plus, Filter, Search, MoreHorizontal, Calendar, Wrench, AlertCircle, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { getOrdensServico } from '@/app/actions/pcm-actions'
+import { OrdemServico, Veiculo } from '@prisma/client'
+
+type OrdemServicoComVeiculo = OrdemServico & { veiculo: Veiculo }
 
 export default async function PcmPage() {
     const { data: ordens, success } = await getOrdensServico()
@@ -58,7 +61,7 @@ export default async function PcmPage() {
                         </thead>
                         <tbody className="divide-y divide-border-color">
                             {ordens && ordens.length > 0 ? (
-                                ordens.map((os: any) => (
+                                ordens.map((os: OrdemServicoComVeiculo) => (
                                     <tr key={os.id} className="hover:bg-surface-highlight/10 transition-colors group">
                                         <td className="px-6 py-4 font-mono text-gray-600 dark:text-gray-300">#{os.numeroOS.toString().padStart(4, '0')}</td>
                                         <td className="px-6 py-4">

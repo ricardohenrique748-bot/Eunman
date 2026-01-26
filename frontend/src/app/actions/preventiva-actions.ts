@@ -1,5 +1,6 @@
 'use server'
 
+import { StatusPreventiva } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -28,7 +29,7 @@ export async function createPreventiva(formData: FormData) {
 
         // 2. Calcular Status Inicial
         // Se (Ultimo + Intervalo) < Atual -> Atrasado
-        let status = 'NO_PRAZO'
+        let status: StatusPreventiva = 'NO_PRAZO'
         if ((ultimoHorimetro + intervalo) < horimetroAtual) {
             status = 'ATRASADO'
         } else if ((ultimoHorimetro + intervalo) - horimetroAtual < 50) {
@@ -44,14 +45,13 @@ export async function createPreventiva(formData: FormData) {
                 ultimoHorimetro,
                 intervalo,
                 dataAtualizacao,
-                status: status as any
+                status: status
             }
         })
 
         revalidatePath('/dashboard/pcm/preventivas')
         return { success: true }
-    } catch (error) {
-        console.error('Erro ao criar preventiva:', error)
+    } catch (_) {
         return { success: false, error: 'Erro ao salvar dados' }
     }
 }
