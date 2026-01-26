@@ -3,7 +3,17 @@
 import { ArrowUpRight, ArrowDownRight, Activity, Wrench, AlertTriangle, CheckCircle2, Clock, FileText, Settings, AlertCircle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
-export default function DashboardClient({ metrics, chartData }: { metrics: any, chartData: any[] }) {
+export default function DashboardClient({ metrics, chartData }: {
+    metrics: {
+        totalOS: number;
+        osAbertas: number;
+        osFechadas: number;
+        disponibilidadeGlobal: string;
+        mttr: string;
+        mtbf: string
+    },
+    chartData: { placa: string; valor: number }[]
+}) {
     return (
         <div className="space-y-8">
             {/* KPI Grid - Style: Clean Modern */}
@@ -118,7 +128,7 @@ export default function DashboardClient({ metrics, chartData }: { metrics: any, 
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                 />
                                 <Bar dataKey="valor" radius={[4, 4, 0, 0]} animationDuration={1500}>
-                                    {chartData.map((entry: any, index: number) => {
+                                    {chartData.map((entry: { placa: string; valor: number }, index: number) => {
                                         let color = '#10B981'; // emerald-500
                                         if (entry.valor < 90) color = '#EF4444'; // red-500
                                         else if (entry.valor < 95) color = '#F59E0B'; // yellow-500
@@ -142,7 +152,15 @@ export default function DashboardClient({ metrics, chartData }: { metrics: any, 
     )
 }
 
-function ModernKpiCard({ title, value, sub, icon: Icon, iconColor, iconBg, isSuccess }: any) {
+function ModernKpiCard({ title, value, sub, icon: Icon, iconColor, iconBg, isSuccess }: {
+    title: string;
+    value: string | number;
+    sub: string;
+    icon: React.ElementType;
+    iconColor: string;
+    iconBg: string;
+    isSuccess?: boolean
+}) {
     return (
         <div className="bg-surface border border-border-color p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-all hover:translate-y-[-2px]">
             <div className="flex justify-between items-start">

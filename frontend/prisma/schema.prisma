@@ -174,3 +174,15 @@ model Pneu {
 
   @@map("pneus_frota")
 }
+
+model SystemParameters {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  group       String   @default("GERAL") // GERAL, NOTIFICACAO, INTEGRACAO, ETC
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_parameters")
+}
