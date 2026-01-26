@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { LayoutDashboard, Wrench, Shield, Package, DollarSign, Users, Truck, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Wrench, Shield, Package, DollarSign, Users, Truck, Settings, LogOut, ChevronDown, Disc, MapPin, CalendarClock, ListTodo } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -20,8 +20,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Visão Geral" active={pathname === '/dashboard'} />
 
+                    <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">PCM</div>
+                    <NavItem href="/dashboard/pcm/os" icon={Wrench} label="Controle de OS" active={isActive('/dashboard/pcm/os')} />
+                    <NavItem href="/dashboard/pcm/preventivas" icon={Settings} label="Preventivas" active={isActive('/dashboard/pcm/preventivas')} />
+                    <NavItem href="/dashboard/pcm/pneus" icon={Disc} label="Pneus" active={isActive('/dashboard/pcm/pneus')} />
+                    <NavItem href="/dashboard/pcm/localizacao" icon={MapPin} label="Localização" active={isActive('/dashboard/pcm/localizacao')} />
+                    <NavItem href="/dashboard/pcm/semanal" icon={CalendarClock} label="Prog. Semanal" active={isActive('/dashboard/pcm/semanal')} />
+                    <NavItem href="/dashboard/pcm/backlog" icon={ListTodo} label="Backlog" active={isActive('/dashboard/pcm/backlog')} />
+
                     <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Operacional</div>
-                    <NavItem href="/dashboard/pcm" icon={Wrench} label="PCM & Manutenção" active={isActive('/dashboard/pcm')} />
                     <NavItem href="/dashboard/seguranca" icon={Shield} label="Segurança (HSE)" active={isActive('/dashboard/seguranca')} />
                     <NavItem href="/dashboard/estoque" icon={Package} label="Almoxarifado" active={isActive('/dashboard/estoque')} />
 
