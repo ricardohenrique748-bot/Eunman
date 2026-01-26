@@ -24,13 +24,14 @@ export async function createUsuario(formData: FormData) {
     try {
         const nome = formData.get('nome') as string
         const email = formData.get('email') as string
+        const senha = formData.get('senha') as string || '123'
         const perfil = formData.get('perfil') as Perfil
 
         await prisma.usuario.create({
             data: {
                 nome,
                 email,
-                senha: '123', // Senha padrão inicial
+                senha,
                 perfil,
                 ativo: true
             }
@@ -149,10 +150,16 @@ export async function updateUsuario(formData: FormData) {
         const nome = formData.get('nome') as string
         const email = formData.get('email') as string
         const perfil = formData.get('perfil') as Perfil
+        const senhaCandidate = formData.get('senha') as string
+
+        const data: any = { nome, email, perfil }
+        if (senhaCandidate && senhaCandidate.trim() !== '') {
+            data.senha = senhaCandidate
+        }
 
         await prisma.usuario.update({
             where: { id },
-            data: { nome, email, perfil }
+            data
         })
         revalidatePath('/dashboard/admin')
         return { success: true }

@@ -170,6 +170,10 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
                                         <option value="ADMIN">Administrador</option>
                                     </select>
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>
+                                    <input name="senha" type="password" required defaultValue="123" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                </div>
                                 <button className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">Salvar Usuário</button>
                             </form>
                         )}
@@ -260,6 +264,10 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
                                         <option value="GESTOR">GESTOR</option>
                                         <option value="ADMIN">ADMIN</option>
                                     </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha (deixe em branco para não alterar)</label>
+                                    <input name="senha" type="password" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
                                 </div>
                                 <button className="w-full bg-primary text-white py-3 rounded-lg font-bold">Atualizar Usuário</button>
                             </form>
