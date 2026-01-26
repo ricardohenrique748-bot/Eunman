@@ -134,14 +134,14 @@ enum StatusOS {
 }
 
 model PlanoManutencao {
-  id             String           @id @default(uuid())
-  veiculoId      String           @map("veiculo")
-  tipoPlano      String           @map("tipo_plano")
-  gatilho        TipoGatilho
-  valorGatilho   Int              @map("valor_gatilho")
-  tolerancia     Int
-  ultimaExecucao DateTime?        @map("ultima_execucao")
-  status         StatusPreventiva @map("status_preventiva")
+  id              String           @id @default(uuid())
+  veiculoId       String           @map("veiculo")
+  tipo            String           @map("tipo_manutencao") // Ex: Motor, Hidraulico (No form: Tipo)
+  modulo          String?          // No form: Módulo
+  ultimoHorimetro Int              @default(0) @map("ultimo_horimetro") // No form: Último Horímetro
+  intervalo       Int              @map("intervalo_horas") // No form: Intervalo
+  dataAtualizacao DateTime         @default(now()) @map("data_atualizacao") // No form: Data da Atualização
+  status          StatusPreventiva @default(NO_PRAZO) @map("status_preventiva")
 
   veiculo Veiculo @relation(fields: [veiculoId], references: [id])
 
