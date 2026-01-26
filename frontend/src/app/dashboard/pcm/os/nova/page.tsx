@@ -16,7 +16,10 @@ export default async function NovaOSPage() {
             </div>
 
             <div className="bg-surface border border-border-color rounded-xl p-6 shadow-lg">
-                <form action={createOrdemServico} className="space-y-6">
+                <form action={async (formData) => {
+                    'use server'
+                    await createOrdemServico(formData)
+                }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs uppercase font-bold text-gray-500 tracking-wider">Veículo / Equipamento</label>
