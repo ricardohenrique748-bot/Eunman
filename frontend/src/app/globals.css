@@ -17,14 +17,14 @@
 
 @layer base {
   :root {
-    /* Light Mode - Standard Clean SaaS */
-    --background: #f1f5f9;  /* Slate 100 */
-    --surface: #ffffff;
-    --surface-highlight: #e2e8f0; /* Slate 200 */
-    --border-color: #cbd5e1;    /* Slate 300 */
-    --foreground: #0f172a;      /* Slate 900 */
+    /* Light Mode - Premium SaaS (Cool & Clean) */
+    --background: #f1f5f9;  /* Slate 100 - Slightly darker than white for contrast */
+    --surface: #ffffff;     /* Pure White cards */
+    --surface-highlight: #f8fafc; /* Slate 50 - Very subtle hover */
+    --border-color: #e2e8f0;    /* Slate 200 - Soft borders */
+    --foreground: #0f172a;      /* Slate 900 - High contrast text */
     
-    --primary: #2563eb;         /* Blue 600 */
+    --primary: #3b82f6;         /* Blue 500 - Vibrant but professional */
     --primary-foreground: #ffffff;
     
     --status-ok: #10b981;
@@ -32,35 +32,34 @@
     --status-critical: #ef4444;
     --status-info: #3b82f6;
 
-    --radius: 0.75rem; /* 12px rounded corners */
+    --radius: 0.75rem;
   }
 
   .dark {
-    /* Dark Mode - MaintX Pro Aesthetic (Deep Navy) */
-    --background: #0f1219;      /* Very Dark Blue/Grey (Main bg) */
-    --surface: #1a1f2b;         /* Dark Blue/Grey (Cards & Sidebar) */
-    --surface-highlight: #252b3b; /* Lighter Blue/Grey (Inputs/Hovers) */
-    --border-color: #2e3648;    /* Border separating elements */
-    --foreground: #ffffff;      /* Pure white text */
+    /* Dark Mode - MaintX Pro (Refined) */
+    --background: #0b1121;      /* Deepest Navy/Black */
+    --surface: #151e32;         /* Lighter Navy for Cards */
+    --surface-highlight: #1e2942; /* Even Lighter for Hovers */
+    --border-color: #2a344a;    /* Subtle Separators */
+    --foreground: #f1f5f9;      /* Slate 100 */
     
-    --primary: #3b82f6;         /* Electric Blue (Buttons/Accents) */
+    --primary: #3b82f6;
     --primary-foreground: #ffffff;
     
-    --status-ok: #10b981;       /* Emerald */
-    --status-warning: #f59e0b;  /* Amber */
-    --status-critical: #ef4444; /* Red */
-    --status-info: #3b82f6;     /* Blue */
+    --status-ok: #10b981;
+    --status-warning: #fbbf24;
+    --status-critical: #ef4444;
+    --status-info: #60a5fa;
   }
 }
 
 @layer utilities {
   .dashboard-card {
-    @apply bg-surface border border-border-color/50 rounded-xl shadow-sm;
+    @apply bg-surface border border-border-color rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-none transition-all duration-200;
   }
   
-  /* Gradiente suave apenas para destaque, não fundo total */
-  .bg-gradient-dark {
-    background: linear-gradient(135deg, #1a1f2b 0%, #0f1219 100%);
+  .dashboard-card:hover {
+    @apply border-primary/30 shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.2)];
   }
 }
 

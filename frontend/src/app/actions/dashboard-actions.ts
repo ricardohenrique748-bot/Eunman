@@ -159,7 +159,42 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
                     mtbf,
                     docs: docStats
                 },
-                chartData: availabilityData
+                chartData: availabilityData,
+                preventiveData: await (async () => {
+                    const planos = await prisma.planoManutencao.findMany({
+                        where: {
+                            veiculo: veiculoWhere
+                        },
+                        include: {
+                            veiculo: {
+                                select: { placa: true, codigoInterno: true, horimetroAtual: true }
+                            }
+                        }
+                    })
+
+                    return planos.map(p => {
+                        const proximaRevisao = p.ultimoHorimetro + p.intervalo
+                        const horasRestantes = proximaRevisao - p.veiculo.horimetroAtual
+
+                        let fill = '#10B981' // Green
+                        if (horasRestantes < 0) fill = '#EF4444' // Red
+                        else if (horasRestantes < 50) fill = '#F59E0B' // Yellow
+
+                        return {
+                            name: `${p.veiculo.placa || p.veiculo.codigoInterno} - ${p.tipo}`,
+                            value: horasRestantes,
+                            originalStatus: p.status, // Database status might differ if heavy logic, but let's trust calc
+                            fill,
+                            placa: p.veiculo.placa || p.veiculo.codigoInterno
+                        }
+                    }).sort((a, b) => a.value - b.value) // Sort by urgency (lowest/negative hours first)
+                })(),
+                recentActivity: await prisma.ordemServico.findMany({
+                    where: unitWhere,
+                    take: 5,
+                    orderBy: { dataAbertura: 'desc' },
+                    include: { veiculo: true }
+                })
             }
         }
     } catch (e: any) {

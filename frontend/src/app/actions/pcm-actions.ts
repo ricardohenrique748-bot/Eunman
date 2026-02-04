@@ -36,35 +36,40 @@ export async function createOrdemServico(formData: FormData) {
     const veiculoId = formData.get('veiculoId') as string
     const tipoOS = formData.get('tipoOS') as TipoOS
     const descricao = formData.get('descricao') as string
-    const prioridade = formData.get('prioridade') as string // Não estava no schema, mas vamos ignorar se não tiver
+    const status = (formData.get('status') as any) || 'ABERTA'
+    const dataAberturaStr = formData.get('dataAbertura') as string
 
     const motivoId = formData.get('motivoId') as string || null
     const sistemaId = formData.get('sistemaId') as string || null
     const subSistemaId = formData.get('subSistemaId') as string || null
 
     if (!veiculoId || !descricao) {
-        return { success: false, error: 'Campos obrigatórios faltando' }
+        return { success: false, error: 'O veículo e a descrição são obrigatórios.' }
     }
 
     try {
+        const dataAbertura = dataAberturaStr ? new Date(dataAberturaStr) : new Date()
+
         await prisma.ordemServico.create({
             data: {
                 veiculoId,
-                tipoOS, // PREVENTIVA, CORRETIVA, etc
-                status: 'ABERTA',
+                tipoOS,
+                status: status as any,
                 descricao,
-                origem: 'Manual',
+                dataAbertura,
+                origem: 'MANUAL',
                 motivoId,
                 sistemaId,
                 subSistemaId
             }
         })
 
-        revalidatePath('/dashboard/pcm')
+        revalidatePath('/dashboard/pcm/os')
         revalidatePath('/dashboard')
         return { success: true }
-    } catch (error) {
-        return { success: false, error: 'Erro ao criar ordem de serviço' }
+    } catch (error: any) {
+        console.error('[PCM Action] Erro ao criar OS:', error)
+        return { success: false, error: `Falha ao registrar O.S.: ${error.message}` }
     }
 }
 

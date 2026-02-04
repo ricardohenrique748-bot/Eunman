@@ -29,6 +29,8 @@ export default function DashboardClient({ metrics, chartData, filters }: {
         }
     },
     chartData: { placa: string; valor: number }[],
+    preventiveData: { name: string; value: number; fill: string; placa: string }[],
+    recentActivity: any[],
     filters: DashboardFilters
 }) {
     const router = useRouter()
@@ -64,9 +66,10 @@ export default function DashboardClient({ metrics, chartData, filters }: {
     const anos = [2024, 2025, 2026]
 
     return (
-        <div className="space-y-8">
-            {/* Filters Bar */}
+        <div className="space-y-8 pb-12">
+            {/* Filters Bar -> (same as before) ... */}
             <div className="bg-surface border border-border-color p-4 rounded-2xl shadow-sm flex flex-wrap gap-4 items-end">
+                {/* (Keeping existing filter inputs) */}
                 <div className="space-y-1.5 flex-1 min-w-[140px]">
                     <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Mês</label>
                     <select
@@ -135,16 +138,6 @@ export default function DashboardClient({ metrics, chartData, filters }: {
                     </select>
                 </div>
 
-                <div className="space-y-1.5 flex-1 min-w-[100px]">
-                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Nº OS</label>
-                    <input
-                        placeholder="Ex: 001"
-                        value={localFilters.os || ''}
-                        onChange={e => setLocalFilters(prev => ({ ...prev, os: e.target.value }))}
-                        className="w-full bg-surface-highlight border border-border-color rounded-xl px-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
-                    />
-                </div>
-
                 <button
                     onClick={applyFilters}
                     className="bg-primary hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-black text-sm shadow-lg shadow-primary/20 transition-all flex items-center gap-2"
@@ -154,45 +147,45 @@ export default function DashboardClient({ metrics, chartData, filters }: {
                 </button>
             </div>
 
-            {/* KPI Grid */}
+            {/* KPI Grid (already updated) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                 <ModernKpiCard
                     title="Total de OS"
                     value={metrics.totalOS}
-                    sub="Clique para ver lista"
+                    sub="Mês selecionado"
                     icon={FileText}
                     iconColor="text-blue-600"
                     iconBg="bg-blue-100 dark:bg-blue-900/30"
                 />
                 <ModernKpiCard
-                    title="Em Andamento"
+                    title="Em Execução"
                     value={metrics.osAbertas}
-                    sub="Clique para ver lista"
+                    sub="Manutenções ativas"
                     icon={Clock}
-                    iconColor="text-yellow-600"
-                    iconBg="bg-yellow-100 dark:bg-yellow-900/30"
+                    iconColor="text-orange-600"
+                    iconBg="bg-orange-100 dark:bg-orange-900/30"
                 />
                 <ModernKpiCard
                     title="OS Fechadas"
                     value={metrics.osFechadas}
-                    sub="Clique para ver lista"
+                    sub="Mês selecionado"
                     icon={CheckCircle2}
-                    iconColor="text-green-600"
-                    iconBg="bg-green-100 dark:bg-green-900/30"
-                />
-                <ModernKpiCard
-                    title="Disponibilidade"
-                    value={`${metrics.disponibilidadeGlobal}%`}
-                    sub="Meta: ≥ 95%"
-                    icon={Activity}
                     iconColor="text-emerald-600"
                     iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+                />
+                <ModernKpiCard
+                    title="Meta Disponib."
+                    value={`${metrics.disponibilidadeGlobal}%`}
+                    sub="Target: 95%"
+                    icon={Activity}
+                    iconColor="text-primary"
+                    iconBg="bg-primary/10"
                     isSuccess={Number(metrics.disponibilidadeGlobal) >= 95}
                 />
                 <ModernKpiCard
                     title="MTTR"
                     value={`${metrics.mttr}h`}
-                    sub="Tempo Médio Reparo"
+                    sub="Média Reparo"
                     icon={Wrench}
                     iconColor="text-purple-600"
                     iconBg="bg-purple-100 dark:bg-purple-900/30"
@@ -205,91 +198,200 @@ export default function DashboardClient({ metrics, chartData, filters }: {
                     iconColor="text-indigo-600"
                     iconBg="bg-indigo-100 dark:bg-indigo-900/30"
                 />
-                <div className="bg-surface border border-border-color p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-all">
+                <div className="dashboard-card p-4 flex flex-col justify-between relative overflow-hidden group">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Docs</p>
+                            <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Documentos</p>
                             <div className="flex items-baseline gap-1.5 flex-wrap">
-                                <span className="text-xl font-bold text-green-600">{metrics.docs?.valid || 0}</span>
-                                <span className="text-xl font-bold text-yellow-500">{metrics.docs?.attention || 0}</span>
-                                <span className="text-xl font-bold text-red-500">{metrics.docs?.expired || 0}</span>
+                                <Link href="/dashboard/rh" className="text-xl font-black text-emerald-500 hover:scale-110 transition-transform">{metrics.docs?.valid || 0}</Link>
+                                <Link href="/dashboard/rh" className="text-xl font-black text-yellow-500 hover:scale-110 transition-transform">{metrics.docs?.attention || 0}</Link>
+                                <Link href="/dashboard/rh" className="text-xl font-black text-red-500 hover:scale-110 transition-transform">{metrics.docs?.expired || 0}</Link>
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-1">V / AV / Venc</p>
+                            <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase">Ok / Atenção / Venc</p>
                         </div>
-                        <div className={`p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600`}>
+                        <div className={`p-2 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20`}>
                             <FileText className="w-5 h-5" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Chart Area */}
-            <div className="bg-surface border border-border-color rounded-xl p-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-                    <h3 className="text-foreground text-lg font-bold">Disponibilidade por Veículo</h3>
-                    <div className="flex items-center gap-4 text-xs font-medium">
+            {/* Main Availability Chart (Already updated) */}
+            <div className="dashboard-card p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-10">
+                    <div>
+                        <h3 className="text-foreground text-xl font-black tracking-tight">Disponibilidade por Veículo</h3>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Percentual de operação no período</p>
+                    </div>
+                    <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <span className="text-gray-600 dark:text-gray-400">≥ 95%</span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                            <span className="text-gray-500">Alto</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
-                            <span className="text-gray-600 dark:text-gray-400">90-94%</span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                            <span className="text-gray-500">Alerta</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                            <span className="text-gray-600 dark:text-gray-400">&lt; 90%</span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+                            <span className="text-gray-500">Crítico</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full overflow-x-auto pb-4">
-                    <div className="h-[400px]" style={{ minWidth: `${Math.max(100, chartData.length * 60)}px` }}>
+                <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
+                    <div className="h-[350px]" style={{ minWidth: `${Math.max(800, chartData.length * 60)}px` }}>
                         {chartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 60 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.2)" />
+                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
                                     <XAxis
                                         dataKey="placa"
                                         angle={-45}
                                         textAnchor="end"
                                         interval={0}
-                                        tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 600 }}
+                                        tick={{ fontSize: 10, fill: '#6B7280', fontWeight: 800 }}
                                         height={60}
                                         tickMargin={10}
                                     />
                                     <YAxis
                                         domain={[0, 100]}
-                                        tick={{ fontSize: 11, fill: '#6B7280' }}
+                                        tick={{ fontSize: 10, fill: '#6B7280', fontWeight: 800 }}
                                         tickFormatter={(val) => `${val}%`}
+                                        stroke="transparent"
                                     />
                                     <Tooltip
-                                        cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                        cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                        contentStyle={{ backgroundColor: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                        itemStyle={{ fontWeight: 'bold' }}
                                     />
-                                    <Bar dataKey="valor" radius={[4, 4, 0, 0]} animationDuration={1500} barSize={40}>
+                                    <Bar dataKey="valor" radius={[6, 6, 0, 0]} animationDuration={1000} barSize={32}>
                                         <LabelList
                                             dataKey="valor"
-                                            position="insideTop"
+                                            position="top"
                                             formatter={(val: number) => `${val}%`}
-                                            style={{ fill: 'white', fontWeight: 'bold', fontSize: '12px' }}
+                                            style={{ fill: '#6B7280', fontWeight: '800', fontSize: '10px' }}
                                         />
-                                        {chartData.map((entry: { placa: string; valor: number }, index: number) => {
-                                            let color = '#10B981'; // emerald-500
-                                            if (entry.valor < 90) color = '#EF4444'; // red-500
-                                            else if (entry.valor < 95) color = '#F59E0B'; // yellow-500
-
+                                        {chartData.map((entry: any, index: number) => {
+                                            let color = '#10B981';
+                                            if (entry.valor < 90) color = '#EF4444';
+                                            else if (entry.valor < 95) color = '#F59E0B';
                                             return <Cell key={`cell-${index}`} fill={color} />;
                                         })}
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-gray-500 bg-surface-highlight/10 rounded-lg">
+                            <div className="flex items-center justify-center h-full text-gray-400 bg-surface-highlight/5 rounded-2xl border-2 border-dashed border-border-color">
                                 <div className="text-center">
-                                    <Activity className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                                    <p>Sem dados de disponibilidade para exibir com os filtros atuais.</p>
+                                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-10" />
+                                    <p className="text-sm font-bold uppercase tracking-widest opacity-40">Sem dados operacionais</p>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Secondary Grid: Preventives & Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Preventive Maintenance Progress */}
+                <div className="dashboard-card p-6">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 className="text-foreground text-lg font-black tracking-tight">Status de Preventivas</h3>
+                            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Horas restantes para serviços</p>
+                        </div>
+                        <div className="flex gap-1">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        </div>
+                    </div>
+
+                    <div className="w-full">
+                        {preventiveData.length > 0 ? (
+                            <div style={{ height: `${Math.max(300, preventiveData.length * 45)}px` }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        layout="vertical"
+                                        data={preventiveData}
+                                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(128,128,128,0.1)" />
+                                        <XAxis type="number" hide />
+                                        <YAxis
+                                            dataKey="name"
+                                            type="category"
+                                            tick={{ fontSize: 9, fill: '#6B7280', fontWeight: 800 }}
+                                            width={140}
+                                            stroke="transparent"
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border-color)', fontSize: '12px' }}
+                                            formatter={(val: number) => [`${val}h`, 'Horas Restantes']}
+                                        />
+                                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
+                                            <LabelList
+                                                dataKey="value"
+                                                position="right"
+                                                formatter={(val: number) => `${val}h`}
+                                                style={{ fill: '#6B7280', fontWeight: '800', fontSize: '10px' }}
+                                            />
+                                            {preventiveData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-[200px] text-gray-500 bg-surface-highlight/10 rounded-2xl border-2 border-dashed border-border-color">
+                                <Settings className="w-10 h-10 mb-3 opacity-10" />
+                                <p className="text-xs font-black uppercase tracking-widest opacity-40">Tudo em dia por aqui</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Recent Activity / OS Feed */}
+                <div className="dashboard-card p-6 flex flex-col">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 className="text-foreground text-lg font-black tracking-tight">Atividades Recentes</h3>
+                            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Últimas Ordens de Serviço abertas</p>
+                        </div>
+                        <Link href="/dashboard/pcm/os" className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">Ver Todas</Link>
+                    </div>
+
+                    <div className="flex-1 space-y-4">
+                        {recentActivity.length > 0 ? (
+                            recentActivity.map((os, i) => (
+                                <div key={os.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-highlight/20 transition-all border border-transparent hover:border-border-color group">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-inner ${os.status === 'CONCLUIDA' ? 'bg-emerald-500/10 text-emerald-500' :
+                                            os.status === 'EM_EXECUCAO' ? 'bg-orange-500/10 text-orange-500' : 'bg-gray-500/10 text-gray-500'
+                                        }`}>
+                                        {os.veiculo?.codigoInterno || 'N/A'}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-baseline mb-0.5">
+                                            <h4 className="text-sm font-black text-foreground truncate max-w-[140px]">{os.veiculo?.placa || '---'}</h4>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase">{new Date(os.dataAbertura).toLocaleDateString('pt-BR')}</span>
+                                        </div>
+                                        <p className="text-[11px] text-gray-500 line-clamp-1 italic">&ldquo;{os.descricao}&rdquo;</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border ${os.tipoOS === 'CORRETIVA' ? 'border-red-500/20 text-red-500 bg-red-500/5' : 'border-blue-500/20 text-blue-500 bg-blue-500/5'
+                                            }`}>
+                                            {os.tipoOS}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-500 opacity-20 py-10">
+                                <FileText className="w-12 h-12 mb-2" />
+                                <p className="text-xs font-black uppercase tracking-widest">Sem atividades registros</p>
                             </div>
                         )}
                     </div>

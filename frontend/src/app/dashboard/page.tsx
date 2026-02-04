@@ -39,6 +39,8 @@ export default async function DashboardPage(props: any) {
         docs: { valid: 0, attention: 0, expired: 0 }
     }
     const chartData = data?.chartData || []
+    const preventiveData = data?.preventiveData || []
+    const recentActivity = data?.recentActivity || []
 
-    return <DashboardClient key={JSON.stringify(filters)} metrics={metrics} chartData={chartData} filters={filters} />
+    return <DashboardClient key={JSON.stringify(filters)} metrics={metrics} chartData={chartData} preventiveData={preventiveData} recentActivity={recentActivity} filters={filters} />
 }

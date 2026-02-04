@@ -41,15 +41,21 @@ export default function NovaOSForm({ veiculos, osOptions }: {
     const filteredSubSistemas = osOptions.sistemas.find(s => s.id === selectedSistemaId)?.subSistemas || []
 
     return (
-        <div className="max-w-4xl mx-auto py-6">
-            <div className="mb-6">
-                <Link href="/dashboard/pcm/os" className="text-gray-400 hover:text-white text-sm flex items-center gap-1 mb-2 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Voltar para Lista
-                </Link>
-                <h1 className="text-2xl font-bold text-white">Nova Ordem de Serviço</h1>
+        <div className="max-w-4xl mx-auto space-y-8">
+            <div className="flex items-center justify-between">
+                <div>
+                    <Link href="/dashboard/pcm/os" className="text-gray-500 hover:text-primary text-xs font-bold flex items-center gap-1 mb-2 transition-colors uppercase tracking-widest">
+                        <ArrowLeft className="w-3 h-3" /> Voltar ao Controle
+                    </Link>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">Abertura de O.S.</h1>
+                    <p className="text-gray-500 text-sm mt-1">Registre uma nova ocorrência de manutenção para a frota.</p>
+                </div>
+                <div className="p-3 bg-primary/10 rounded-2xl">
+                    <Clock className="w-8 h-8 text-primary" />
+                </div>
             </div>
 
-            <div className="bg-surface border border-border-color rounded-xl p-6 shadow-lg">
+            <div className="dashboard-card p-8">
                 <form action={async (formData) => {
                     const res = await createOrdemServico(formData)
                     if (res.success) {
@@ -57,165 +63,173 @@ export default function NovaOSForm({ veiculos, osOptions }: {
                     } else {
                         alert(res.error)
                     }
-                }} className="space-y-6">
+                }} className="space-y-10">
 
-                    {/* Linha 1: Datas e Status/Placa */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Datas */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Data/Hora Abertura</label>
-                            <div className="relative">
-                                <input type="datetime-local" name="dataAbertura" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary" />
-                                <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-500 pointer-events-none" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Data/Hora Fechamento</label>
-                            <div className="relative">
-                                <input type="datetime-local" name="dataFechamento" disabled className="w-full bg-surface-highlight/50 border border-border-color rounded px-3 py-2 text-gray-400 text-sm cursor-not-allowed" />
-                                <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-600 pointer-events-none" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Status</label>
-                            <select name="status" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none">
-                                <option value="ABERTA">Aberta</option>
-                                <option value="EM_ANDAMENTO">Em Andamento</option>
-                                <option value="FECHAD">Fechada</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Placa *</label>
-                            <select name="veiculoId" required className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none">
-                                <option value="">Selecione</option>
-                                {veiculos.map((v) => (
-                                    <option key={v.id} value={v.id}>{v.placa ? `${v.placa} - ${v.modelo}` : v.modelo}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Linha 2: Módulo */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Módulo</label>
-                        <input type="text" name="modulo" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary" />
-                    </div>
-
-                    {/* Linha 3: Horimetro, Operação, Local */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Horímetro</label>
-                            <input type="number" name="horimetro" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Operação (Tipo)</label>
-                            <input type="text" name="operacao" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Local</label>
-                            <input type="text" name="local" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                    </div>
-
-                    {/* Linha 4: Classe e Checkbox */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Classe</label>
-                            <select name="tipoOS" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none">
-                                <option value="CORRETIVA">CORRETIVA</option>
-                                <option value="PREVENTIVA">PREVENTIVA</option>
-                                <option value="MELHORIA">MELHORIA</option>
-                            </select>
+                    {/* Section: Basic Info */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-l-4 border-primary pl-4">
+                            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Informações Básicas</h2>
                         </div>
 
-                        <div className="flex flex-col pt-5 gap-4">
-                            <div className="flex items-center gap-2">
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={enviadoReserva}
-                                        onChange={(e) => setEnviadoReserva(e.target.checked)}
-                                    />
-                                    <div className="w-11 h-6 bg-surface-highlight peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-checked:after:bg-white"></div>
-                                    <span className="ml-3 text-sm font-medium text-gray-600 dark:text-gray-300">Foi enviado reserva?</span>
-                                </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Veículo / Placa *</label>
+                                <select name="veiculoId" required className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="">Selecione o Veículo</option>
+                                    {veiculos.map((v) => (
+                                        <option key={v.id} value={v.id}>{v.codigoInterno} - {v.modelo} ({v.placa || 'Interno'})</option>
+                                    ))}
+                                </select>
                             </div>
 
-                            {/* Campo Condicional */}
-                            {enviadoReserva && (
-                                <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label className="text-xs font-semibold text-primary">Qual reserva foi enviada?</label>
-                                    <select name="veiculoReservaId" className="w-full bg-surface-highlight border border-primary/50 rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none">
-                                        <option value="">Selecione o veículo reserva...</option>
-                                        {veiculos.map((v) => (
-                                            <option key={v.id} value={v.id}>{v.placa ? `${v.placa} - ${v.modelo}` : v.modelo}</option>
-                                        ))}
-                                    </select>
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Tipo de Manutenção *</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['CORRETIVA', 'PREVENTIVA', 'MELHORIA'].map(tipo => (
+                                        <label key={tipo} className="cursor-pointer">
+                                            <input type="radio" name="tipoOS" value={tipo} className="peer hidden" defaultChecked={tipo === 'CORRETIVA'} />
+                                            <div className="text-center py-3 rounded-xl border border-border-color font-bold text-[10px] transition-all peer-checked:bg-primary/10 peer-checked:border-primary peer-checked:text-primary hover:bg-surface-highlight uppercase tracking-tighter">
+                                                {tipo}
+                                            </div>
+                                        </label>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Data/Hora Abertura *</label>
+                                <div className="relative">
+                                    <input type="datetime-local" name="dataAbertura" defaultValue={new Date().toISOString().slice(0, 16)} required className="w-full bg-background border border-border-color rounded-xl px-4 py-3 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all pl-11" />
+                                    <Calendar className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-500 pointer-events-none" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Horímetro Atual</label>
+                                <input type="number" name="horimetro" placeholder="Ex: 1450" className="w-full bg-background border border-border-color rounded-xl px-4 py-3 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Status Inicial</label>
+                                <select name="status" className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="ABERTA">ABERTA</option>
+                                    <option value="EM_EXECUCAO">EM EXECUÇÃO</option>
+                                    <option value="PLANEJADA">PLANEJADA</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Linha 5: Descrição Gigante */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Descrição da Atividade *</label>
-                        <textarea name="descricao" rows={5} required className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary resize-none"></textarea>
+                    {/* Section: Detailed Diagnosis */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-l-4 border-primary pl-4">
+                            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Diagnóstico & Local</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Motivo / Causa</label>
+                                <select name="motivoId" className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="">Selecione o Motivo</option>
+                                    {osOptions.motivos.map(m => (
+                                        <option key={m.id} value={m.id}>{m.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Sistema Afetado</label>
+                                <select
+                                    name="sistemaId"
+                                    value={selectedSistemaId}
+                                    onChange={(e) => setSelectedSistemaId(e.target.value)}
+                                    className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">Selecione o Sistema</option>
+                                    {osOptions.sistemas.map(s => (
+                                        <option key={s.id} value={s.id}>{s.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Sub-Sistema</label>
+                                <select name="subSistemaId" className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="">Selecione o Sub-Sistema</option>
+                                    {filteredSubSistemas.map((ss: OsSubSistema) => (
+                                        <option key={ss.id} value={ss.id}>{ss.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Descrição Detalhada do Problema *</label>
+                            <textarea name="descricao" rows={4} required placeholder="Descreva os sintomas, falhas observadas ou serviços a serem realizados..." className="w-full bg-background border border-border-color rounded-xl px-4 py-4 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all resize-none"></textarea>
+                        </div>
                     </div>
 
-                    {/* Linha 6: Motivo, Sistema, Sub-Sistema */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Motivo</label>
-                            <select name="motivoId" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none">
-                                <option value="">Selecione</option>
-                                {osOptions.motivos.map(m => (
-                                    <option key={m.id} value={m.id}>{m.nome}</option>
-                                ))}
-                            </select>
+                    {/* Section: Logistics */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-l-4 border-primary pl-4">
+                            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Logística & Apoio</h2>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Sistema</label>
-                            <select
-                                name="sistemaId"
-                                value={selectedSistemaId}
-                                onChange={(e) => setSelectedSistemaId(e.target.value)}
-                                className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none"
-                            >
-                                <option value="">Selecione</option>
-                                {osOptions.sistemas.map(s => (
-                                    <option key={s.id} value={s.id}>{s.nome}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Sub-Sistema</label>
-                            <select name="subSistemaId" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary appearance-none">
-                                <option value="">Selecione</option>
-                                {filteredSubSistemas.map((ss: OsSubSistema) => (
-                                    <option key={ss.id} value={ss.id}>{ss.nome}</option>
-                                ))}
-                            </select>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between p-4 bg-background border border-border-color rounded-2xl group transition-all hover:border-primary/30">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black text-foreground uppercase tracking-wider">Substituição de Veículo</span>
+                                        <span className="text-[10px] text-gray-500 font-bold">Foi enviado reserva para o local?</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={enviadoReserva}
+                                            onChange={(e) => setEnviadoReserva(e.target.checked)}
+                                        />
+                                        <div className="w-12 h-6 bg-surface-highlight rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+
+                                {enviadoReserva && (
+                                    <div className="space-y-2 animate-in fade-in zoom-in-95 duration-300">
+                                        <label className="text-[10px] uppercase font-black text-primary tracking-widest ml-1">Veículo Reserva Enviado</label>
+                                        <select name="veiculoReservaId" className="w-full bg-background border border-primary/30 rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="">Selecione o reserva...</option>
+                                            {veiculos.map((v) => (
+                                                <option key={v.id} value={v.id}>{v.codigoInterno} - {v.placa}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Local do Equipamento</label>
+                                    <input type="text" name="local" placeholder="Ex: Frente 02, Oficina Sul..." className="w-full bg-background border border-border-color rounded-xl px-4 py-3 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Módulo / Equipamento Específico</label>
+                                    <input type="text" name="modulo" placeholder="Ex: Motor, Caçamba, Implemento..." className="w-full bg-background border border-border-color rounded-xl px-4 py-3 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Footer Azul */}
-                    <div className="bg-blue-900/10 dark:bg-blue-900/20 border border-blue-500/20 rounded-lg p-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-blue-500" />
-                        <span className="text-blue-700 dark:text-blue-200 font-medium text-sm">Tempo Total de Manutenção: <strong className="text-foreground text-lg">0 horas</strong></span>
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-3">
-                        <Link href="/dashboard/pcm/os">
-                            <button type="button" className="px-6 py-2 rounded bg-white text-gray-800 font-bold hover:bg-gray-100 transition-colors border border-gray-200">
+                    <div className="pt-8 border-t border-border-color flex flex-col sm:flex-row justify-end gap-4">
+                        <Link href="/dashboard/pcm/os" className="w-full sm:w-auto">
+                            <button type="button" className="w-full px-8 py-3.5 rounded-xl border border-border-color text-gray-400 font-bold hover:bg-surface-highlight transition-all uppercase text-[10px] tracking-widest">
                                 Cancelar
                             </button>
                         </Link>
-                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded font-bold transition-all shadow-lg active:scale-95">
-                            Criar OS
+                        <button type="submit" className="w-full sm:w-auto bg-primary hover:bg-blue-600 text-white px-12 py-3.5 rounded-xl font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-[0.98] uppercase text-[10px] tracking-widest">
+                            <Clock className="w-4 h-4 stroke-[3px]" />
+                            Abrir Ordem de Serviço
                         </button>
                     </div>
                 </form>
