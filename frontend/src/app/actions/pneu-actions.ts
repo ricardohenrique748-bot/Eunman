@@ -1,6 +1,8 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export async function getPneus() {
     return await prisma.pneu.findMany({
@@ -26,14 +28,17 @@ export async function createPneu(formData: FormData) {
                 codigoPneu,
                 medida,
                 status,
-                sulcoAtualMm: parseFloat(sulco),
+                sulcoAtualMm: parseFloat(sulco) || 0,
                 vida: 1
             }
         })
-        return { success: true }
-    } catch (_) {
+        revalidatePath('/dashboard/pcm/pneus')
+    } catch (error: any) {
+        console.error('[PNEU] Create error:', error)
         return { success: false, error: 'Erro ao cadastrar pneu' }
     }
+
+    redirect('/dashboard/pcm/pneus')
 }
 
 export async function createBoletimPneu(formData: FormData) {
@@ -99,10 +104,11 @@ export async function createBoletimPneu(formData: FormData) {
                 }
             }
         })
+        revalidatePath('/dashboard/pcm/pneus')
         return { success: true }
-    } catch (e) {
-        console.error(e)
-        return { success: false, error: 'Erro ao salvar boletim' }
+    } catch (e: any) {
+        console.error('[BOLETIM] Create error:', e)
+        return { success: false, error: 'Erro ao salvar boletim: ' + e.message }
     }
 }
 
@@ -129,8 +135,10 @@ export async function deleteBoletim(id: string) {
         await prisma.boletimPneu.delete({
             where: { id }
         })
+        revalidatePath('/dashboard/pcm/pneus')
         return { success: true }
-    } catch (error) {
+    } catch (error: any) {
+        console.error('[BOLETIM] Delete error:', error)
         return { success: false, error: 'Erro ao excluir boletim' }
     }
 }

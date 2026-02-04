@@ -3,6 +3,7 @@
 import { ArrowUpRight, ArrowDownRight, Activity, Wrench, AlertTriangle, CheckCircle2, Clock, FileText, Settings, AlertCircle, Filter, Search } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useState, useCallback, useEffect } from 'react'
 
 interface DashboardFilters {
@@ -14,7 +15,7 @@ interface DashboardFilters {
     tipo?: string
 }
 
-export default function DashboardClient({ metrics, chartData, filters }: {
+export default function DashboardClient({ metrics, chartData, preventiveData, recentActivity, filters }: {
     metrics: {
         totalOS: number;
         osAbertas: number;
@@ -369,7 +370,7 @@ export default function DashboardClient({ metrics, chartData, filters }: {
                             recentActivity.map((os, i) => (
                                 <div key={os.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-highlight/20 transition-all border border-transparent hover:border-border-color group">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-inner ${os.status === 'CONCLUIDA' ? 'bg-emerald-500/10 text-emerald-500' :
-                                            os.status === 'EM_EXECUCAO' ? 'bg-orange-500/10 text-orange-500' : 'bg-gray-500/10 text-gray-500'
+                                        os.status === 'EM_EXECUCAO' ? 'bg-orange-500/10 text-orange-500' : 'bg-gray-500/10 text-gray-500'
                                         }`}>
                                         {os.veiculo?.codigoInterno || 'N/A'}
                                     </div>
