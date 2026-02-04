@@ -17,37 +17,48 @@
 
 @layer base {
   :root {
-    /* Light Mode */
-    --background: #ffffff;
-    --surface: #f4f4f5;
-    --surface-highlight: #e4e4e7;
-    --border-color: #d4d4d8;
-    --foreground: #09090b;
+    /* Light Mode - Modern Glass */
+    --background: #f8fafc; /* Slate 50 */
+    --surface: rgba(255, 255, 255, 0.75);
+    --surface-highlight: rgba(241, 245, 249, 0.6); /* Slate 100 */
+    --border-color: rgba(226, 232, 240, 0.8); /* Slate 200 */
+    --foreground: #0f172a; /* Slate 900 */
     
-    --primary: #15803d;
+    --primary: #ea580c; /* Orange 600 - More vibrant */
     --primary-foreground: #ffffff;
     
     --status-ok: #10b981;
-    --status-warning: #eab308;
+    --status-warning: #f59e0b;
     --status-critical: #ef4444;
     --status-info: #3b82f6;
+
+    --radius: 1rem;
   }
 
   .dark {
-    /* Dark Mode (~Original) */
-    --background: #0a0a0a;
-    --surface: #121212;
-    --surface-highlight: #1a1a1a;
-    --border-color: #262626;
-    --foreground: #ededed;
+    /* Dark Mode - Deep Glass */
+    --background: #020617; /* Slate 950 */
+    --surface: rgba(30, 41, 59, 0.6); /* Slate 800 */
+    --surface-highlight: rgba(51, 65, 85, 0.5); /* Slate 700 */
+    --border-color: rgba(71, 85, 105, 0.6); /* Slate 600 */
+    --foreground: #f8fafc; /* Slate 50 */
     
-    --primary: #15803d;
+    --primary: #f97316; /* Orange 500 */
     --primary-foreground: #ffffff;
     
-    --status-ok: #10b981;
+    --status-ok: #34d399;
     --status-warning: #fbbf24;
-    --status-critical: #ef4444;
-    --status-info: #3b82f6;
+    --status-critical: #f87171;
+    --status-info: #60a5fa;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-xl bg-surface border border-white/20 shadow-xl;
+  }
+  .glass-card {
+    @apply backdrop-blur-md bg-surface border border-border-color shadow-sm rounded-2xl;
   }
 }
 

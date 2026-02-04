@@ -11,7 +11,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/')
 
     return (
-        <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+        <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans relative selection:bg-primary/20">
+            {/* Background Mesh Gradients */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px] animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[100px] animate-pulse delay-1000" />
+                <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] rounded-full bg-emerald-500/10 blur-[80px] animate-pulse delay-700" />
+            </div>
             {/* Sidebar */}
             <aside className="w-64 bg-surface/50 border-r border-border-color flex flex-col z-20 backdrop-blur-xl">
                 <div className="h-20 flex items-center px-6 border-b border-border-color/50">

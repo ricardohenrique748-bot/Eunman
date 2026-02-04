@@ -48,7 +48,7 @@ export async function createBoletimPneu(formData: FormData) {
     }
 
     const posicoes = ['DE', 'DD', 'TEI', 'TEE', 'TDI', 'TDE', 'TEI1', 'TEE1', 'TDI1', 'TDE1', 'ESTEPE']
-    const itens = []
+    const itens: { posicao: string; sulcoMm: number }[] = []
 
     for (const pos of posicoes) {
         const sulco = formData.get(`sulco_${pos}`)
@@ -105,3 +105,43 @@ export async function createBoletimPneu(formData: FormData) {
         return { success: false, error: 'Erro ao salvar boletim' }
     }
 }
+
+export async function getBoletins() {
+    return await prisma.boletimPneu.findMany({
+        include: {
+            veiculo: {
+                select: {
+                    placa: true,
+                    codigoInterno: true,
+                    modelo: true
+                }
+            },
+            itens: true
+        },
+        orderBy: {
+            data: 'desc'
+        }
+    })
+}
+
+export async function deleteBoletim(id: string) {
+    try {
+        await prisma.boletimPneu.delete({
+            where: { id }
+        })
+        return { success: true }
+    } catch (error) {
+        return { success: false, error: 'Erro ao excluir boletim' }
+    }
+}
+
+export async function getBoletimById(id: string) {
+    return await prisma.boletimPneu.findUnique({
+        where: { id },
+        include: {
+            veiculo: true,
+            itens: true
+        }
+    })
+}
+
