@@ -132,27 +132,15 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
         const totalPossibleHours = totalHoursInPeriod * Math.max(1, veiculos.length)
         const mtbf = correctiveOS > 0 ? (totalPossibleHours / correctiveOS).toFixed(1) : '0.0'
 
-        // Docs
-        let docStats = { valid: 0, attention: 0, expired: 0 }
+        // Docs (Zerado a pedido do usuário para limpeza do dashboard)
+        const docStats = { valid: 0, attention: 0, expired: 0 }
+        /* 
         try {
-            // @ts-ignore
-            if (prisma.documentoFrota) {
-                // @ts-ignore
-                const docs = await prisma.documentoFrota.findMany({
-                    where: { veiculo: unitWhere }
-                })
-
-                docs.forEach((doc: any) => {
-                    if (!doc.dataValidade) return
-                    const daysLeft = Math.ceil((new Date(doc.dataValidade).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-                    if (daysLeft < 0) docStats.expired++
-                    else if (daysLeft < 30) docStats.attention++
-                    else docStats.valid++
-                })
-            }
+            // ... (lógica desativada temporariamente)
         } catch (err) {
             console.error('[Dashboard] Error fetching docs:', err)
         }
+        */
 
         return {
             success: true,
