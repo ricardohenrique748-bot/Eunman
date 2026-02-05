@@ -201,17 +201,29 @@ export default function DashboardClient({ metrics, chartData, preventiveData, re
                 />
                 <div className="dashboard-card p-4 flex flex-col justify-between relative overflow-hidden group">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Documentos</p>
-                            <div className="flex items-baseline gap-1.5 flex-wrap">
-                                <Link href="/dashboard/rh" className="text-xl font-black text-emerald-500 hover:scale-110 transition-transform">{metrics.docs?.valid || 0}</Link>
-                                <Link href="/dashboard/rh" className="text-xl font-black text-yellow-500 hover:scale-110 transition-transform">{metrics.docs?.attention || 0}</Link>
-                                <Link href="/dashboard/rh" className="text-xl font-black text-red-500 hover:scale-110 transition-transform">{metrics.docs?.expired || 0}</Link>
+                        <div className="flex flex-col w-full">
+                            <p className="text-[10px] font-black uppercase text-gray-500 mb-2 tracking-widest">Documentos da Frota</p>
+                            <div className="grid grid-cols-3 gap-3 w-full">
+                                <Link href="/dashboard/rh" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
+                                    <span className="text-xl font-black text-emerald-500 leading-none">{metrics.docs?.valid ?? 0}</span>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Ok</span>
+                                </Link>
+                                <Link href="/dashboard/rh" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
+                                    <span className="text-xl font-black text-yellow-500 leading-none">{metrics.docs?.attention ?? 0}</span>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Avisos</span>
+                                </Link>
+                                <Link href="/dashboard/rh" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
+                                    <span className="text-xl font-black text-red-500 leading-none">{metrics.docs?.expired ?? 0}</span>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Venc</span>
+                                </Link>
                             </div>
-                            <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase">Ok / Atenção / Venc</p>
+                            <div className="mt-3 flex items-center justify-between border-t border-border-color/30 pt-2">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Status Geral</span>
+                                <ArrowUpRight className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            </div>
                         </div>
-                        <div className={`p-2 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20`}>
-                            <FileText className="w-5 h-5" />
+                        <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                            <FileText className="w-12 h-12 text-primary" />
                         </div>
                     </div>
                 </div>
