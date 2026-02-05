@@ -30,7 +30,6 @@ export default function DashboardShell({ children, user }: { children: React.Rea
                         </div>
                         <div>
                             <span className="font-black text-sm tracking-tighter text-foreground block leading-none">EUNAMAN</span>
-                            <span className="text-[10px] font-black text-primary tracking-widest uppercase opacity-80">MaintX Pro</span>
                         </div>
                     </div>
                 </div>
