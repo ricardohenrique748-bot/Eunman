@@ -25,6 +25,28 @@ export default function ColheitaPage() {
     const [isImporting, setIsImporting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
+    // Estado para armazenar o status individual de cada célula (Lavagem)
+    const [cellStatuses, setCellStatuses] = useState<Record<string, 'PENDING' | 'DONE' | 'JUSTIFIED_SUZANO' | 'JUSTIFIED_EUNAMAN'>>({})
+
+    const toggleStatus = (rowId: string, date: string, currentVal: number) => {
+        if (!currentVal) return
+
+        const key = `${rowId}-${date}`
+        const currentStatus = cellStatuses[key] || 'PENDING'
+
+        const nextStatusMap: Record<string, 'PENDING' | 'DONE' | 'JUSTIFIED_SUZANO' | 'JUSTIFIED_EUNAMAN'> = {
+            'PENDING': 'DONE',
+            'DONE': 'JUSTIFIED_SUZANO',
+            'JUSTIFIED_SUZANO': 'JUSTIFIED_EUNAMAN',
+            'JUSTIFIED_EUNAMAN': 'PENDING'
+        }
+
+        setCellStatuses(prev => ({
+            ...prev,
+            [key]: nextStatusMap[currentStatus]
+        }))
+    }
+
     // Função para importar planilha da Suzano
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -65,27 +87,108 @@ export default function ColheitaPage() {
         reader.readAsBinaryString(file)
     }
 
-    const getCellValue = (val: number | undefined) => {
+    const folgaDates = ['22/01', '23/01', '30/01', '31/01', '07/02', '08/02']
+
+    const getCellValue = (val: number | undefined, date: string, tag: string, rowId: string) => {
+        if (view === 'LUBRIFICACAO') {
+            return (
+                <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-600 transition-all hover:bg-emerald-100">
+                    <Check className="w-4 h-4 stroke-[3px]" />
+                </div>
+            )
+        }
+
+        if (view === 'CALIBRAGEM' || view === 'TENSIONAMENTO') {
+            const isActivityMachine = view === 'CALIBRAGEM' ? tag.startsWith('F-FWX') : tag.startsWith('F-HVE')
+            const isFolga = folgaDates.includes(date)
+
+            if (isActivityMachine && isFolga) {
+                // Identificar as máquinas do grupo (FW ou HV) e a posição desta máquina na lista
+                const groupPrefix = view === 'CALIBRAGEM' ? 'F-FWX' : 'F-HVE'
+                const activityColor = view === 'CALIBRAGEM' ? 'bg-orange-600' : 'bg-purple-600'
+                const activityLabel = view === 'CALIBRAGEM' ? 'Calibragem' : 'Tensionamento'
+                const waiterColor = view === 'CALIBRAGEM' ? 'text-orange-200/40' : 'text-purple-200/40'
+
+                const groupMachines = data.filter(m => (m as any).tag.startsWith(groupPrefix))
+                const machineIndex = groupMachines.findIndex(m => (m as any).tag === tag)
+
+                const dateIndex = folgaDates.indexOf(date)
+                const isDay1OfBlock = dateIndex % 2 === 0
+
+                // Regra: se tiver N máquinas, faz metade no dia 1 e metade no dia 2
+                const splitPoint = Math.ceil(groupMachines.length / 2)
+                const isMyTurn = isDay1OfBlock
+                    ? machineIndex < splitPoint
+                    : machineIndex >= splitPoint
+
+                if (isMyTurn) {
+                    return (
+                        <div className={`w-full h-full flex flex-col items-center justify-center ${activityColor} text-white animate-pulse shadow-lg font-black italic`}>
+                            <span className="text-[7px] uppercase tracking-tighter leading-none opacity-80">Executar</span>
+                            <span className="text-[9px]">{activityLabel}</span>
+                        </div>
+                    )
+                }
+
+                return (
+                    <div className={`w-full h-full flex items-center justify-center ${waiterColor}`}>
+                        <span className="text-[8px] font-bold uppercase italic opacity-30">Aguardar</span>
+                    </div>
+                )
+            }
+            return null
+        }
+
         if (!val) return null
 
-        // Regra: 125 = Parcial, > 125 = Geral
+        // Lógica LAVAGEM com Status
+        const key = `${rowId}-${date}`
+        const status = cellStatuses[key] || 'PENDING'
         const isGeral = val > 125
 
+        let containerClass = ''
+        let textClass = ''
+
+        switch (status) {
+            case 'DONE':
+                containerClass = 'bg-emerald-500 shadow-md ring-1 ring-emerald-600'
+                textClass = 'text-white'
+                break
+            case 'JUSTIFIED_SUZANO':
+                containerClass = 'bg-yellow-400 shadow-sm'
+                textClass = 'text-yellow-900'
+                break
+            case 'JUSTIFIED_EUNAMAN':
+                containerClass = 'bg-red-500 shadow-md ring-1 ring-red-600'
+                textClass = 'text-white'
+                break
+            case 'PENDING':
+            default:
+                containerClass = isGeral ? 'bg-slate-300 ring-2 ring-slate-400' : 'bg-slate-100'
+                textClass = isGeral ? 'text-slate-800' : 'text-slate-500'
+                break
+        }
+
         return (
-            <div className={`w-full h-full flex flex-col items-center justify-center transition-all ${isGeral
-                ? 'bg-blue-600 text-white font-black animate-pulse shadow-inner'
-                : 'bg-blue-100 text-blue-800 font-bold'
-                }`}>
-                <span className="text-[10px]">{val}</span>
-                <span className="text-[7px] uppercase tracking-tighter opacity-80 leading-none">
-                    {isGeral ? 'Geral' : 'Parcial'}
-                </span>
+            <div
+                onClick={() => toggleStatus(rowId, date, val)}
+                className={`w-full h-full flex flex-col items-center justify-center transition-all cursor-pointer hover:brightness-110 active:scale-95 ${containerClass}`}
+            >
+                <div className="flex flex-col items-center">
+                    <span className={`text-[10px] font-black leading-none ${textClass}`}>{val}</span>
+                    <span className={`text-[6px] uppercase tracking-widest leading-none mt-0.5 opacity-80 ${textClass}`}>
+                        {status === 'PENDING' ? (isGeral ? 'GERAL' : 'PARCIAL') :
+                            status === 'DONE' ? 'FEITO' :
+                                status === 'JUSTIFIED_SUZANO' ? 'J. SUZ' : 'J. EUN'}
+                    </span>
+                </div>
             </div>
         )
     }
 
     return (
         <div className="space-y-6">
+            {/* Header section... */}
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -141,18 +244,66 @@ export default function ColheitaPage() {
 
             {/* Legends */}
             <div className="flex items-center gap-6 px-4 py-3 bg-surface border border-border-color rounded-xl w-fit">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg border border-blue-200 flex items-center justify-center">
-                        <span className="text-[10px] font-black text-blue-800 italic">125</span>
+                {view === 'LAVAGEM' && (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-slate-200 rounded-full border border-slate-300"></div>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Pendente</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-emerald-200 shadow-md"></div>
+                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Feito (Verde)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-yellow-400 rounded-full shadow-yellow-200 shadow-md"></div>
+                            <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-wide">Imp. Suzano (Amarelo)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-500 rounded-full shadow-red-200 shadow-md"></div>
+                            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wide">Imp. Eunaman (Vermelho)</span>
+                        </div>
+                    </>
+                )}
+                {view === 'LUBRIFICACAO' && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Lubrificação Diária OK</span>
                     </div>
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Parcial</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg shadow-lg flex items-center justify-center">
-                        <span className="text-[10px] font-black text-white italic">250+</span>
-                    </div>
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Geral (Crítico)</span>
-                </div>
+                )}
+                {view === 'CALIBRAGEM' && (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-orange-100 rounded-lg border border-orange-200 flex items-center justify-center">
+                                <span className="text-[8px] font-black text-orange-700">M1</span>
+                            </div>
+                            <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">1ª Metade (Folga 1)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-orange-600 rounded-lg shadow-lg flex items-center justify-center">
+                                <span className="text-[8px] font-black text-white">M2</span>
+                            </div>
+                            <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">2ª Metade (Folga 2)</span>
+                        </div>
+                    </>
+                )}
+                {view === 'TENSIONAMENTO' && (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-purple-100 rounded-lg border border-purple-200 flex items-center justify-center">
+                                <span className="text-[8px] font-black text-purple-700">M1</span>
+                            </div>
+                            <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">1ª Metade (Folga 1)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-purple-600 rounded-lg shadow-lg flex items-center justify-center">
+                                <span className="text-[8px] font-black text-white">M2</span>
+                            </div>
+                            <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">2ª Metade (Folga 2)</span>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Grid Container */}
@@ -192,7 +343,7 @@ export default function ColheitaPage() {
                                     {dates.map(date => (
                                         <td key={date} className={`h-12 border-r border-border-color p-0.5 text-center transition-all hover:bg-primary/5 cursor-pointer relative ${['24/01', '25/01', '31/01', '01/02', '07/02', '08/02'].includes(date) ? 'bg-orange-500/5' : ''
                                             }`}>
-                                            {getCellValue(row.values[date as keyof typeof row.values])}
+                                            {getCellValue(row.values[date as keyof typeof row.values], date, row.tag, row.id)}
                                             <div className="absolute inset-0 border-2 border-primary border-dashed opacity-0 hover:opacity-100 pointer-events-none transition-opacity rounded-sm" />
                                         </td>
                                     ))}
