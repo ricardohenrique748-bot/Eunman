@@ -33,6 +33,7 @@ interface Usuario {
     email: string
     perfil: string
     ativo: boolean
+    area?: string // Added
     empresaPadrao?: { nomeFantasia: string } | null
     unidadePadraoId?: string | null
     unidadePadrao?: { nomeUnidade: string } | null
@@ -91,6 +92,7 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
     const [activeTab, setActiveTab] = useState('database')
     const [showModal, setShowModal] = useState<string | null>(null) // 'user', 'company', 'unit'
     const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null)
+    const [userTab, setUserTab] = useState<'info' | 'access'>('info') // Tab state for user form, requested by user
     const [editItem, setEditItem] = useState<
         | { type: 'vehicle', data: Veiculo }
         | { type: 'user', data: Usuario }
@@ -172,38 +174,72 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
                                 await createUsuario(formData)
                                 setShowModal(null)
                             }} className="space-y-5">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo</label>
-                                    <input name="nome" required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                <div className="flex gap-2 mb-4 p-1 bg-surface-highlight/50 rounded-lg border border-border-color">
+                                    <button type="button" onClick={() => setUserTab('info')} className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all ${userTab === 'info' ? 'bg-white dark:bg-surface shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>Dados Pessoais</button>
+                                    <button type="button" onClick={() => setUserTab('access')} className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all ${userTab === 'access' ? 'bg-white dark:bg-surface shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>Acesso & Área</button>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Endereço de E-mail</label>
-                                    <input name="email" required type="email" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Perfil de Acesso</label>
-                                        <select name="perfil" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-                                            <option value="OPERACIONAL">Operacional</option>
-                                            <option value="PCM">PCM</option>
-                                            <option value="GESTOR">Gestor</option>
-                                            <option value="ADMIN">Administrador</option>
-                                        </select>
+
+                                {userTab === 'info' && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo</label>
+                                            <input name="nome" required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Endereço de E-mail</label>
+                                            <input name="email" required type="email" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Senha Inicial</label>
+                                            <input name="senha" type="password" required defaultValue="123" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filial / Unidade</label>
-                                        <select name="unidadePadraoId" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-                                            <option value="">Acesso Global / Sede</option>
-                                            {allUnits.map(u => (
-                                                <option key={u.id} value={u.id}>{u.nomeUnidade}</option>
-                                            ))}
-                                        </select>
+                                )}
+
+                                {userTab === 'access' && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Perfil de Acesso</label>
+                                                <select name="perfil" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                                    <option value="OPERACIONAL">Operacional</option>
+                                                    <option value="PCM">PCM</option>
+                                                    <option value="GESTOR">Gestor</option>
+                                                    <option value="ADMIN">Administrador</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filial / Unidade</label>
+                                                <select name="unidadePadraoId" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                                    <option value="">Acesso Global / Sede</option>
+                                                    {allUnits.map(u => (
+                                                        <option key={u.id} value={u.id}>{u.nomeUnidade}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                                Área de Atuação <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-bold">Para Gestores</span>
+                                            </label>
+                                            <select name="area" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                                <option value="GERAL">Todas / Geral</option>
+                                                <option value="PCM">PCM (Planejamento e Controle)</option>
+                                                <option value="FROTA">Gestão de Frota</option>
+                                                <option value="COLHEITA">Operação: Colheita</option>
+                                                <option value="SILVICULTURA">Operação: Silvicultura</option>
+                                                <option value="CARREGAMENTO">Operação: Carregamento</option>
+                                                <option value="ALMOXARIFADO">Logística / Almoxarifado</option>
+                                                <option value="RH">Recursos Humanos & Equipe</option>
+                                                <option value="FINANCEIRO">Financeiro & Custos</option>
+                                                <option value="SEGURANCA">Segurança do Trabalho (HSE)</option>
+                                            </select>
+                                            <p className="text-[10px] text-gray-400">Restringe a visualização de dados para o perfil GESTOR.</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>
-                                    <input name="senha" type="password" required defaultValue="123" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
-                                </div>
+                                )}
+
                                 <button className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">Salvar Usuário</button>
                             </form>
                         )}
@@ -361,39 +397,73 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
                                 setEditItem(null)
                             }} className="space-y-5">
                                 <input type="hidden" name="id" value={editItem.data.id} />
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
-                                    <input name="nome" defaultValue={editItem.data.nome} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
+
+                                <div className="flex gap-2 mb-4 p-1 bg-surface-highlight/50 rounded-lg border border-border-color">
+                                    <button type="button" onClick={() => setUserTab('info')} className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all ${userTab === 'info' ? 'bg-white dark:bg-surface shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>Dados Pessoais</button>
+                                    <button type="button" onClick={() => setUserTab('access')} className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all ${userTab === 'access' ? 'bg-white dark:bg-surface shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>Acesso & Área</button>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">E-mail</label>
-                                    <input name="email" type="email" defaultValue={editItem.data.email} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
-                                        <select name="perfil" defaultValue={editItem.data.perfil} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color">
-                                            <option value="OPERACIONAL">OPERACIONAL</option>
-                                            <option value="PCM">PCM</option>
-                                            <option value="GESTOR">GESTOR</option>
-                                            <option value="ADMIN">ADMIN</option>
-                                        </select>
+
+                                {userTab === 'info' && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
+                                            <input name="nome" defaultValue={editItem.data.nome} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">E-mail</label>
+                                            <input name="email" type="email" defaultValue={editItem.data.email} required className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha (deixe em branco para não alterar)</label>
+                                            <input name="senha" type="password" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filial</label>
-                                        <select name="unidadePadraoId" defaultValue={editItem.data.unidadePadraoId ?? ''} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color">
-                                            <option value="">Acesso Global</option>
-                                            {allUnits.map(u => (
-                                                <option key={u.id} value={u.id}>{u.nomeUnidade}</option>
-                                            ))}
-                                        </select>
+                                )}
+
+                                {userTab === 'access' && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Perfil</label>
+                                                <select name="perfil" defaultValue={editItem.data.perfil} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                                    <option value="OPERACIONAL">OPERACIONAL</option>
+                                                    <option value="PCM">PCM</option>
+                                                    <option value="GESTOR">GESTOR</option>
+                                                    <option value="ADMIN">ADMIN</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filial</label>
+                                                <select name="unidadePadraoId" defaultValue={editItem.data.unidadePadraoId ?? ''} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                                    <option value="">Acesso Global</option>
+                                                    {allUnits.map(u => (
+                                                        <option key={u.id} value={u.id}>{u.nomeUnidade}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                                Área de Atuação <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-bold">Para Gestores</span>
+                                            </label>
+                                            <select name="area" defaultValue={editItem.data.area || 'GERAL'} className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                                <option value="GERAL">Todas / Geral</option>
+                                                <option value="PCM">PCM (Planejamento e Controle)</option>
+                                                <option value="FROTA">Gestão de Frota</option>
+                                                <option value="COLHEITA">Operação: Colheita</option>
+                                                <option value="SILVICULTURA">Operação: Silvicultura</option>
+                                                <option value="CARREGAMENTO">Operação: Carregamento</option>
+                                                <option value="ALMOXARIFADO">Logística / Almoxarifado</option>
+                                                <option value="RH">Recursos Humanos & Equipe</option>
+                                                <option value="FINANCEIRO">Financeiro & Custos</option>
+                                                <option value="SEGURANCA">Segurança do Trabalho (HSE)</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha (deixe em branco para não alterar)</label>
-                                    <input name="senha" type="password" className="w-full p-3 rounded-lg bg-surface-highlight border border-border-color" />
-                                </div>
-                                <button className="w-full bg-primary text-white py-3 rounded-lg font-bold">Atualizar Usuário</button>
+                                )}
+
+                                <button className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">Atualizar Usuário</button>
                             </form>
                         )}
 

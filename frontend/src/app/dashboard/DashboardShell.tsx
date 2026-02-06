@@ -19,6 +19,16 @@ export default function DashboardShell({ children, user }: { children: React.Rea
         return name.substring(0, 2).toUpperCase()
     }
 
+    // Helper to check access
+    const checkAccess = (allowedAreas: string[]) => {
+        if (!user) return false
+        if (user.perfil === 'ADMIN') return true
+        if (user.perfil !== 'GESTOR') return true
+        const userArea = user.area || 'GERAL'
+        if (userArea === 'GERAL') return true
+        return allowedAreas.includes(userArea)
+    }
+
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
             {/* Sidebar */}
@@ -39,43 +49,55 @@ export default function DashboardShell({ children, user }: { children: React.Rea
                         <NavItem href="/dashboard" icon={LayoutDashboard} label="Visão Geral" active={pathname === '/dashboard'} />
                     </div>
 
-                    <div className="space-y-1">
-                        <div className="px-4 mb-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Controle PCM</span>
+                    {(checkAccess(['PCM', 'FROTA'])) && (
+                        <div className="space-y-1">
+                            <div className="px-4 mb-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Controle PCM</span>
+                            </div>
+                            {checkAccess(['FROTA', 'PCM']) && <NavItem href="/dashboard/frota" icon={Truck} label="Cadastro da Frota" active={isActive('/dashboard/frota')} />}
+                            {checkAccess(['PCM']) && (
+                                <>
+                                    <NavItem href="/dashboard/pcm/os" icon={Wrench} label="Gestão de O.S." active={isActive('/dashboard/pcm/os')} />
+                                    <NavItem href="/dashboard/pcm/semanal" icon={CalendarClock} label="Prog. Semanal" active={isActive('/dashboard/pcm/semanal')} />
+                                    <NavItem href="/dashboard/pcm/backlog" icon={ListTodo} label="Fila de Backlog" active={isActive('/dashboard/pcm/backlog')} />
+                                    <NavItem href="/dashboard/pcm/preventivas" icon={Settings} label="Planos de Preventiva" active={isActive('/dashboard/pcm/preventivas')} />
+                                </>
+                            )}
+                            {checkAccess(['PCM', 'FROTA']) && <NavItem href="/dashboard/pcm/pneus" icon={Disc} label="Controle de Pneus" active={isActive('/dashboard/pcm/pneus')} />}
+                            {checkAccess(['PCM', 'FROTA', 'COLHEITA', 'SILVICULTURA', 'CARREGAMENTO']) && <NavItem href="/dashboard/pcm/localizacao" icon={MapPin} label="Localização" active={isActive('/dashboard/pcm/localizacao')} />}
                         </div>
-                        <NavItem href="/dashboard/frota" icon={Truck} label="Cadastro da Frota" active={isActive('/dashboard/frota')} />
-                        <NavItem href="/dashboard/pcm/os" icon={Wrench} label="Gestão de O.S." active={isActive('/dashboard/pcm/os')} />
-                        <NavItem href="/dashboard/pcm/semanal" icon={CalendarClock} label="Prog. Semanal" active={isActive('/dashboard/pcm/semanal')} />
-                        <NavItem href="/dashboard/pcm/backlog" icon={ListTodo} label="Fila de Backlog" active={isActive('/dashboard/pcm/backlog')} />
-                        <NavItem href="/dashboard/pcm/preventivas" icon={Settings} label="Planos de Preventiva" active={isActive('/dashboard/pcm/preventivas')} />
-                        <NavItem href="/dashboard/pcm/pneus" icon={Disc} label="Controle de Pneus" active={isActive('/dashboard/pcm/pneus')} />
-                        <NavItem href="/dashboard/pcm/localizacao" icon={MapPin} label="Localização" active={isActive('/dashboard/pcm/localizacao')} />
-                    </div>
+                    )}
 
-                    <div className="space-y-1">
-                        <div className="px-4 mb-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Operação</span>
+                    {(checkAccess(['COLHEITA', 'SILVICULTURA', 'CARREGAMENTO'])) && (
+                        <div className="space-y-1">
+                            <div className="px-4 mb-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Operação</span>
+                            </div>
+                            {checkAccess(['COLHEITA']) && <NavItem href="/dashboard/operacao/colheita" icon={Tractor} label="Colheita" active={isActive('/dashboard/operacao/colheita')} />}
+                            {checkAccess(['SILVICULTURA']) && <NavItem href="/dashboard/operacao/silvicultura" icon={Trees} label="Silvicultura" active={isActive('/dashboard/operacao/silvicultura')} />}
+                            {checkAccess(['CARREGAMENTO']) && <NavItem href="/dashboard/operacao/carregamento" icon={Truck} label="Carregamento" active={isActive('/dashboard/operacao/carregamento')} />}
                         </div>
-                        <NavItem href="/dashboard/operacao/colheita" icon={Tractor} label="Colheita" active={isActive('/dashboard/operacao/colheita')} />
-                        <NavItem href="/dashboard/operacao/silvicultura" icon={Trees} label="Silvicultura" active={isActive('/dashboard/operacao/silvicultura')} />
-                        <NavItem href="/dashboard/operacao/carregamento" icon={Truck} label="Carregamento" active={isActive('/dashboard/operacao/carregamento')} />
-                    </div>
+                    )}
 
-                    <div className="space-y-1">
-                        <div className="px-4 mb-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Logística</span>
+                    {(checkAccess(['ALMOXARIFADO', 'PCM'])) && (
+                        <div className="space-y-1">
+                            <div className="px-4 mb-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Logística</span>
+                            </div>
+                            <NavItem href="/dashboard/estoque" icon={Package} label="Almoxarifado" active={isActive('/dashboard/estoque')} />
                         </div>
-                        <NavItem href="/dashboard/estoque" icon={Package} label="Almoxarifado" active={isActive('/dashboard/estoque')} />
-                    </div>
+                    )}
 
-                    <div className="space-y-1">
-                        <div className="px-4 mb-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Corporativo</span>
+                    {(checkAccess(['RH', 'FINANCEIRO', 'SEGURANCA'])) && (
+                        <div className="space-y-1">
+                            <div className="px-4 mb-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Corporativo</span>
+                            </div>
+                            {checkAccess(['RH']) && <NavItem href="/dashboard/rh" icon={Users} label="Equipe & RH" active={isActive('/dashboard/rh')} />}
+                            {checkAccess(['FINANCEIRO']) && <NavItem href="/dashboard/custos" icon={DollarSign} label="Financeiro" active={isActive('/dashboard/custos')} />}
+                            {checkAccess(['SEGURANCA']) && <NavItem href="/dashboard/seguranca" icon={Shield} label="Segurança (HSE)" active={isActive('/dashboard/seguranca')} />}
                         </div>
-                        <NavItem href="/dashboard/rh" icon={Users} label="Equipe & RH" active={isActive('/dashboard/rh')} />
-                        <NavItem href="/dashboard/custos" icon={DollarSign} label="Financeiro" active={isActive('/dashboard/custos')} />
-                        <NavItem href="/dashboard/seguranca" icon={Shield} label="Segurança (HSE)" active={isActive('/dashboard/seguranca')} />
-                    </div>
+                    )}
                 </nav>
 
                 <div className="p-4 border-t border-border-color">

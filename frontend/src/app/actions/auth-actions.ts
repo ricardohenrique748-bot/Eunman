@@ -36,6 +36,7 @@ export async function login(formData: FormData) {
         nome: user.nome,
         email: user.email,
         perfil: user.perfil,
+        area: user.area,
         unidadeId: user.unidadePadraoId
     }
 
@@ -78,6 +79,7 @@ export async function updatePassword(formData: FormData) {
             nome: user.nome,
             email: user.email,
             perfil: user.perfil,
+            area: user.area,
             unidadeId: user.unidadePadraoId
         }
 

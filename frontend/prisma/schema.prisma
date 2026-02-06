@@ -22,6 +22,7 @@ model Usuario {
   empresaPadrao Empresa? @relation(fields: [empresaPadraoId], references: [id])
   unidadePadrao Unidade? @relation(fields: [unidadePadraoId], references: [id])
   trocarSenha   Boolean  @default(true) @map("trocar_senha")
+  area          Area     @default(GERAL)
 
   @@map("usuarios")
 }
@@ -35,6 +36,19 @@ enum Perfil {
   CUSTO
   RH
   OPERACIONAL
+}
+
+enum Area {
+  GERAL
+  PCM
+  FROTA
+  COLHEITA
+  SILVICULTURA
+  CARREGAMENTO
+  ALMOXARIFADO
+  RH
+  FINANCEIRO
+  SEGURANCA
 }
 
 // 2. CADASTROS BASE

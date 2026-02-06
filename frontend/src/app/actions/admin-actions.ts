@@ -46,6 +46,8 @@ export async function createUsuario(formData: FormData) {
         const email = formData.get('email') as string
         const senha = formData.get('senha') as string || '123'
         const perfil = formData.get('perfil') as Perfil
+        // @ts-ignore
+        const area = formData.get('area') || 'GERAL'
 
         const unidadePadraoId = formData.get('unidadePadraoId') as string
 
@@ -55,6 +57,8 @@ export async function createUsuario(formData: FormData) {
                 email,
                 senha,
                 perfil,
+                // @ts-ignore
+                area: area,
                 unidadePadraoId: unidadePadraoId !== '' ? unidadePadraoId : null,
                 ativo: true
             }
@@ -173,6 +177,8 @@ export async function updateUsuario(formData: FormData) {
         const nome = formData.get('nome') as string
         const email = formData.get('email') as string
         const perfil = formData.get('perfil') as Perfil
+        // @ts-ignore
+        const area = formData.get('area')
         const senhaCandidate = formData.get('senha') as string
         const unidadePadraoId = formData.get('unidadePadraoId') as string
 
@@ -180,6 +186,7 @@ export async function updateUsuario(formData: FormData) {
             nome,
             email,
             perfil,
+            area,
             unidadePadraoId: unidadePadraoId !== '' ? unidadePadraoId : null
         }
         if (senhaCandidate && senhaCandidate.trim() !== '') {
