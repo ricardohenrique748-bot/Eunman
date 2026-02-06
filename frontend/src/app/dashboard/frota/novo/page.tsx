@@ -10,7 +10,10 @@ export default function NovoVeiculoPage() {
                 <h1 className="text-xl font-bold text-foreground">Novo Veículo</h1>
             </div>
 
-            <form action={createVeiculo} className="space-y-6">
+            <form action={async (formData) => {
+                'use server'
+                await createVeiculo(formData)
+            }} className="space-y-6">
 
                 {/* INFORMAÇÕES BÁSICAS */}
                 <div className="bg-blue-50/40 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl p-6">

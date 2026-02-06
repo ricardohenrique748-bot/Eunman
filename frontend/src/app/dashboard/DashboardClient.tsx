@@ -282,7 +282,7 @@ export default function DashboardClient({ metrics, chartData, preventiveData, re
                                         <LabelList
                                             dataKey="valor"
                                             position="top"
-                                            formatter={(val: number) => `${val}%`}
+                                            formatter={(val: any) => `${val}%`}
                                             style={{ fill: '#6B7280', fontWeight: '800', fontSize: '10px' }}
                                         />
                                         {chartData.map((entry: any, index: number) => {
@@ -341,13 +341,13 @@ export default function DashboardClient({ metrics, chartData, preventiveData, re
                                         <Tooltip
                                             contentStyle={{ backgroundColor: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border-color)', fontSize: '12px' }}
                                             cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                                            formatter={(val: number) => [`${val}h`, 'Horas Restantes']}
+                                            formatter={(val: any) => [`${val}h`, 'Horas Restantes']}
                                         />
                                         <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={32}>
                                             <LabelList
                                                 dataKey="value"
                                                 position="top"
-                                                formatter={(val: number) => `${val}h`}
+                                                formatter={(val: any) => `${val}h`}
                                                 style={{ fill: '#6B7280', fontWeight: '800', fontSize: '10px' }}
                                             />
                                             {preventiveData.map((entry, index) => (
