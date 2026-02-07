@@ -5,7 +5,7 @@ import { LayoutDashboard, ListTodo, TableProperties, RefreshCw, FileSpreadsheet,
 import BacklogList from './BacklogList'
 import BacklogDashboard from './BacklogDashboard'
 import BacklogDetailed from './BacklogDetailed'
-import { BacklogItem } from '@/app/actions/backlog-actions'
+import { BacklogItem, importBacklogItems } from '@/app/actions/backlog-actions'
 import * as XLSX from 'xlsx'
 import { v4 as uuidv4 } from 'uuid'
 import BacklogFormDialog from './BacklogFormDialog'
@@ -68,7 +68,7 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
                         className="flex items-center gap-2 px-3 py-2 bg-surface border border-border-color rounded-lg text-xs font-bold hover:bg-surface-highlight transition-colors"
                     >
                         <FileUp className="w-4 h-4 text-blue-500" />
-                        Importar PDF
+                        Importar
                     </button>
                     <button
                         onClick={handleExport}
@@ -127,13 +127,39 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
                     onSuccess={() => window.location.reload()} // For simplicity, full reload or re-fetch via action
                 />
             )}
-            {isImportOpen && (
-                <ImportBacklogDialog
-                    isOpen={isImportOpen}
-                    onClose={() => setIsImportOpen(false)}
-                    onSuccess={() => window.location.reload()}
-                />
-            )}
+            <ImportBacklogDialog
+                isOpen={isImportOpen}
+                onClose={() => setIsImportOpen(false)}
+                onSuccess={() => window.location.reload()}
+                onImport={async (items) => {
+                    try {
+                        const CHUNK_SIZE = 20 // Reduced chunk size to be safe
+                        let successCount = 0
+                        const total = items.length
+
+                        // Process in chunks
+                        for (let i = 0; i < total; i += CHUNK_SIZE) {
+                            const chunk = items.slice(i, i + CHUNK_SIZE)
+                            const result = await importBacklogItems(chunk)
+
+                            if (result.success) {
+                                successCount += (result.count || 0)
+                            } else {
+                                console.error('Chunk error:', result.error)
+                                // If one chunk fails, we continue trying others? Or stop?
+                                // Let's stop to prevent flooding errors if schema is wrong
+                                throw new Error(result.error)
+                            }
+                        }
+
+                        alert(`Sucesso! ${successCount} itens foram importados.`)
+                    } catch (error: any) {
+                        console.error('Import error:', error)
+                        alert('Erro durante a importação: ' + (error.message || 'Erro desconhecido'))
+                        throw error
+                    }
+                }}
+            />
         </div>
     )
 }

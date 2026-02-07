@@ -293,3 +293,106 @@ export async function deleteBacklogItem(id: string) {
         return { success: false, error: e.message }
     }
 }
+
+export async function importBacklogItems(items: Omit<BacklogItem, 'id' | 'createdAt' | 'updatedAt'>[]) {
+    try {
+        if (items.length === 0) return { success: true, count: 0 }
+
+        const valuesList: string[] = []
+
+        for (const data of items) {
+             const fields = [
+                'semana', 'mes', 'ano', 'modulo', 'regiao_programacao', 'dias_pendencia_aberta',
+                'frota', 'tag', 'tipo', 'descricao_atividade', 'origem', 'criticidade',
+                'tempo_execucao_previsto', 'campo_base', 'os', 'material', 'numero_rc',
+                'numero_ordem', 'fornecedor', 'detalhamento_pedido', 'tipo_pedido',
+                'situacao_rc', 'dias_abertura_req_compras', 'mao_de_obra',
+                'delta_evidencia_programacao', 'status_programacao', 'dias_resolucao_pendencia',
+                'status', 'observacao'
+            ]
+
+             const dateFields = [
+                'data_evidencia', 'data_rc', 'data_necessidade_material', 'previsao_material',
+                'data_programacao', 'previsao_conclusao_pendencia', 'data_conclusao_pendencia'
+            ]
+
+            const values = [
+                ...fields.map(f => {
+                    const camelKey = f.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof data
+                    let val: any
+                    if (f === 'descricao_atividade') val = data.descricaoAtividade
+                    else if (f === 'regiao_programacao') val = data.regiaoProgramacao
+                    else if (f === 'dias_pendencia_aberta') val = data.diasPendenciaAberta
+                    else if (f === 'tempo_execucao_previsto') val = data.tempoExecucaoPrevisto
+                    else if (f === 'campo_base') val = data.campoBase
+                    else if (f === 'numero_rc') val = data.numeroRc
+                    else if (f === 'numero_ordem') val = data.numeroOrdem
+                    else if (f === 'detalhamento_pedido') val = data.detalhamentoPedido
+                    else if (f === 'tipo_pedido') val = data.tipoPedido
+                    else if (f === 'situacao_rc') val = data.situacaoRc
+                    else if (f === 'dias_abertura_req_compras') val = data.diasAberturaReqCompras
+                    else if (f === 'mao_de_obra') val = data.maoDeObra
+                    else if (f === 'delta_evidencia_programacao') val = data.deltaEvidenciaProgramacao
+                    else if (f === 'status_programacao') val = data.statusProgramacao
+                    else if (f === 'dias_resolucao_pendencia') val = data.diasResolucaoPendencia
+                    else val = data[f as keyof typeof data]
+
+                    if (val === undefined || val === null || val === '') return 'NULL'
+                    if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`
+                    return val
+                }),
+                ...dateFields.map(f => {
+                   let val: any
+                    if (f === 'data_evidencia') val = data.dataEvidencia
+                    else if (f === 'data_rc') val = data.dataRc
+                    else if (f === 'data_necessidade_material') val = data.dataNecessidadeMaterial
+                    else if (f === 'previsao_material') val = data.previsaoMaterial
+                    else if (f === 'data_programacao') val = data.dataProgramacao
+                    else if (f === 'previsao_conclusao_pendencia') val = data.previsaoConclusaoPendencia
+                    else if (f === 'data_conclusao_pendencia') val = data.dataConclusaoPendencia
+
+                    if (!val) return 'NULL'
+                    try {
+                         return `'${new Date(val).toISOString()}'`
+                    } catch {
+                        return 'NULL'
+                    }
+                })
+            ].join(', ')
+            
+            valuesList.push(`(gen_random_uuid(), NOW(), NOW(), ${values})`)
+        }
+
+        const fields = [
+            'semana', 'mes', 'ano', 'modulo', 'regiao_programacao', 'dias_pendencia_aberta',
+            'frota', 'tag', 'tipo', 'descricao_atividade', 'origem', 'criticidade',
+            'tempo_execucao_previsto', 'campo_base', 'os', 'material', 'numero_rc',
+            'numero_ordem', 'fornecedor', 'detalhamento_pedido', 'tipo_pedido',
+            'situacao_rc', 'dias_abertura_req_compras', 'mao_de_obra',
+            'delta_evidencia_programacao', 'status_programacao', 'dias_resolucao_pendencia',
+            'status', 'observacao'
+        ]
+        const dateFields = [
+            'data_evidencia', 'data_rc', 'data_necessidade_material', 'previsao_material',
+            'data_programacao', 'previsao_conclusao_pendencia', 'data_conclusao_pendencia'
+        ]
+        const columns = [...fields, ...dateFields].map(f => `"${f}"`).join(', ')
+
+        // Batch insert in chunks of 50 to avoid query string limit issues
+        const CHUNK_SIZE = 50
+        for (let i = 0; i < valuesList.length; i += CHUNK_SIZE) {
+            const chunk = valuesList.slice(i, i + CHUNK_SIZE)
+             const query = `
+                INSERT INTO "backlog_pcm" (id, created_at, updated_at, ${columns})
+                VALUES ${chunk.join(', ')}
+            `
+            await prisma.$executeRawUnsafe(query)
+        }
+       
+        revalidatePath('/dashboard/pcm/backlog')
+        return { success: true, count: items.length }
+    } catch (e: any) {
+        console.error('Import error:', e)
+        return { success: false, error: e.message }
+    }
+}

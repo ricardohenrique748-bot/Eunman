@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { X, Upload, FileText, CheckCircle2 } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 interface Props {
     isOpen: boolean
@@ -9,7 +10,7 @@ interface Props {
     onSuccess: () => void
 }
 
-export default function ImportBacklogDialog({ isOpen, onClose, onSuccess }: Props) {
+export default function ImportBacklogDialog({ isOpen, onClose, onSuccess, onImport }: Props & { onImport?: (items: any[]) => Promise<void> }) {
     const [file, setFile] = useState<File | null>(null)
     const [uploading, setUploading] = useState(false)
     const [progress, setProgress] = useState(0)
@@ -20,21 +21,123 @@ export default function ImportBacklogDialog({ isOpen, onClose, onSuccess }: Prop
         }
     }
 
+    const processExcel = async (file: File) => {
+        return new Promise<any[]>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target?.result as ArrayBuffer)
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true })
+                    const firstSheetName = workbook.SheetNames[0]
+                    const worksheet = workbook.Sheets[firstSheetName]
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+                    resolve(jsonData)
+                } catch (err) {
+                    reject(err)
+                }
+            }
+            reader.onerror = (err) => reject(err)
+            reader.readAsArrayBuffer(file)
+        })
+    }
+
+    const mapDataToBacklogItems = (data: any[]) => {
+        return data.map(row => {
+            // Helper to find key case-insensitively
+            const get = (key: string) => {
+                const foundKey = Object.keys(row).find(k => k.toLowerCase().trim() === key.toLowerCase())
+                return foundKey ? row[foundKey] : null
+            }
+
+            return {
+                semana: get('Semana')?.toString(),
+                mes: get('Mês')?.toString() || get('Mes')?.toString(),
+                ano: get('Ano')?.toString(),
+                dataEvidencia: get('Data Evidência') || get('Data Evidencia'),
+                modulo: get('Módulo')?.toString() || get('Modulo')?.toString(),
+                regiaoProgramacao: get('Região Programação') || get('Regiao Programacao'),
+                diasPendenciaAberta: Number(get('Dias Pendência Aberta') || get('Dias Pendencia Aberta') || 0),
+                frota: get('Frota')?.toString(),
+                tag: get('Tag')?.toString(),
+                tipo: get('Tipo')?.toString(),
+                descricaoAtividade: get('Descrição Atividade') || get('Descricao Atividade') || get('Descrição'),
+                origem: get('Origem')?.toString(),
+                criticidade: get('Criticidade')?.toString(),
+                tempoExecucaoPrevisto: get('Tempo Execução Previsto') || get('Tempo Execucao Previsto'),
+                campoBase: get('Campo Base')?.toString(),
+                os: get('OS')?.toString() || get('Ordem de Serviço')?.toString(),
+                material: get('Material')?.toString(),
+                numeroRc: get('Número RC') || get('Numero RC'),
+                numeroOrdem: get('Número Ordem') || get('Numero Ordem'),
+                fornecedor: get('Fornecedor')?.toString(),
+                dataRc: get('Data RC'),
+                detalhamentoPedido: get('Detalhamento Pedido'),
+                dataNecessidadeMaterial: get('Data Necessidade Material'),
+                tipoPedido: get('Tipo Pedido'),
+                previsaoMaterial: get('Previsão Material') || get('Previsao Material'),
+                situacaoRc: get('Situação RC') || get('Situacao RC'),
+                diasAberturaReqCompras: Number(get('Dias Abertura Req Compras') || 0),
+                dataProgramacao: get('Data Programação') || get('Data Programacao'),
+                maoDeObra: get('Mão de Obra') || get('Mao de Obra'),
+                deltaEvidenciaProgramacao: Number(get('Delta Evidência Programação') || get('Delta Evidencia Programacao') || 0),
+                statusProgramacao: get('Status Programação') || get('Status Programacao'),
+                previsaoConclusaoPendencia: get('Previsão Conclusão Pendência') || get('Previsao Conclusao Pendencia'),
+                dataConclusaoPendencia: get('Data Conclusão Pendência') || get('Data Conclusao Pendencia'),
+                diasResolucaoPendencia: Number(get('Dias Resolução Pendência') || get('Dias Resolucao Pendencia') || 0),
+                status: get('Status')?.toString(),
+                observacao: get('Observação') || get('Observacao')
+            }
+        })
+    }
+
     const handleImport = async () => {
         if (!file) return
         setUploading(true)
 
-        // Simulate upload/process
-        for (let i = 0; i <= 100; i += 10) {
-            setProgress(i)
-            await new Promise(r => setTimeout(r, 200))
-        }
+        try {
+            // Emulate progress
+            const interval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 90) {
+                        clearInterval(interval)
+                        return 90
+                    }
+                    return prev + 10
+                })
+            }, 100)
 
-        // Mock success
-        setUploading(false)
-        alert('Simulação: Arquivo processado com sucesso! (Funcionalidade de PDF requer API de extração)')
-        onSuccess()
-        onClose()
+            let items: any[] = []
+            if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                const rawData = await processExcel(file)
+                items = mapDataToBacklogItems(rawData)
+            } else {
+                // PDF import not supported yet
+                alert('Importação de PDF requer processamento específico. Por favor use Excel.')
+                setUploading(false)
+                clearInterval(interval)
+                return
+            }
+
+            clearInterval(interval)
+            setProgress(100)
+
+            if (onImport) {
+                await onImport(items)
+            } else {
+                // Fallback for simulation
+                await new Promise(r => setTimeout(r, 500))
+            }
+
+            setUploading(false)
+            onSuccess()
+            onClose()
+
+        } catch (error) {
+            console.error(error)
+            alert('Erro ao processar arquivo.')
+            setUploading(false)
+            setProgress(0)
+        }
     }
 
     if (!isOpen) return null
@@ -58,16 +161,16 @@ export default function ImportBacklogDialog({ isOpen, onClose, onSuccess }: Prop
 
                     <div className="space-y-2">
                         <h4 className="text-sm font-bold text-foreground">
-                            {file ? file.name : 'Selecione o arquivo PDF ou Excel'}
+                            {file ? file.name : 'Selecione o arquivo Excel'}
                         </h4>
                         <p className="text-xs text-gray-500 max-w-[200px] mx-auto">
-                            Arraste e solte ou clique para selecionar o arquivo de backlog para importação.
+                            Arraste e solte ou clique para selecionar o arquivo de backlog (.xlsx) para importação.
                         </p>
                     </div>
 
                     <input
                         type="file"
-                        accept=".pdf,.xlsx,.xls"
+                        accept=".xlsx,.xls"
                         onChange={handleFileChange}
                         className="hidden"
                         id="file-upload"
