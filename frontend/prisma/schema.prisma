@@ -99,6 +99,7 @@ model Veiculo {
   categoria       String?
   moduloSistema   String?           @map("modulo_sistema")
   dataAtualizacaoHorimetro DateTime? @map("data_atualizacao_horimetro")
+  semanaPreventiva Int?             @map("semana_preventiva")
 
   empresa     Empresa     @relation(fields: [empresaId], references: [id])
   unidade     Unidade     @relation(fields: [unidadeId], references: [id])

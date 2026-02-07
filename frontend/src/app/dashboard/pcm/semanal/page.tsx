@@ -1,9 +1,14 @@
-export default function SemanalPage() {
+import { getVeiculosSemanal } from '@/app/actions/pcm-actions'
+import SemanalClient from './SemanalClient'
+
+export const dynamic = 'force-dynamic'
+
+export default async function SemanalPage() {
+    const data = await getVeiculosSemanal()
+
     return (
-        <div className="p-6 bg-surface border border-border-color rounded-xl h-[80vh] flex items-center justify-center flex-col text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Programação Semanal</h2>
-            <p className="text-gray-500 dark:text-gray-400">Calendário de Execução</p>
-            <span className="mt-4 px-3 py-1 bg-yellow-500/10 text-yellow-500 text-xs font-mono rounded-full border border-yellow-500/20">EM CONSTRUÇÃO</span>
+        <div className="h-[85vh] p-4">
+            <SemanalClient initialData={data} />
         </div>
     )
 }

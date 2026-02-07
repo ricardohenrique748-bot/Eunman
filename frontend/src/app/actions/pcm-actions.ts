@@ -112,3 +112,47 @@ export async function getVeiculosDropdown() {
         where
     })
 }
+
+export async function getVeiculosSemanal() {
+    const session = await getSession()
+    if (!session) return []
+
+    const where: any = { status: { not: 'DESATIVADO' } }
+    if (session.perfil !== 'ADMIN' && session.perfil !== 'PCM') {
+        // Allow PCM to see all if needed, or restrict by unit like others
+        if (session.perfil !== 'PCM') {
+            where.unidadeId = session.unidadeId
+        }
+    }
+
+    // specific selection
+    const data = await prisma.veiculo.findMany({
+        select: {
+            id: true,
+            codigoInterno: true,
+            placa: true,
+            modelo: true,
+            tipoVeiculo: true,
+            status: true,
+            semanaPreventiva: true
+        },
+        where,
+        orderBy: { codigoInterno: 'asc' }
+    })
+
+    return data as any[] // weak typing until prisma client regenerates
+}
+
+export async function updateSemanaPreventiva(veiculoId: string, semana: number | null) {
+    try {
+        await prisma.veiculo.update({
+            where: { id: veiculoId },
+            data: { semanaPreventiva: semana }
+        })
+        revalidatePath('/dashboard/pcm/semanal')
+        return { success: true }
+    } catch (error) {
+        console.error('Error updating weekly schedule:', error)
+        return { success: false, error: 'Failed to update schedule' }
+    }
+}
