@@ -62,7 +62,7 @@ export default function BacklogDashboard({ data }: { data: BacklogItem[] }) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-500">{completed}</div>
-                        <p className="text-xs text-muted-foreground">Taxa de resolução: {Math.round((completed / total) * 100)}%</p>
+                        <p className="text-xs text-muted-foreground">Taxa de resolução: {total > 0 ? Math.round((completed / total) * 100) : 0}%</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-surface shadow-none border-border-color/50">

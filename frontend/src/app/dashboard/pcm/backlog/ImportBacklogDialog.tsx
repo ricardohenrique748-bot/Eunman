@@ -43,49 +43,88 @@ export default function ImportBacklogDialog({ isOpen, onClose, onSuccess, onImpo
 
     const mapDataToBacklogItems = (data: any[]) => {
         return data.map(row => {
-            // Helper to find key case-insensitively
-            const get = (key: string) => {
-                const foundKey = Object.keys(row).find(k => k.toLowerCase().trim() === key.toLowerCase())
-                return foundKey ? row[foundKey] : null
+            // Helper to find key case-insensitively and handle variations
+            // We create a map of normalized keys to values for faster lookup
+            const normalizedRow: Record<string, any> = {}
+            Object.keys(row).forEach(k => {
+                const cleanKey = k.toLowerCase().trim()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+                    .replace(/[^a-z0-9]/g, "") // Remove special chars
+                normalizedRow[cleanKey] = row[k]
+            })
+
+            const get = (keyPattern: string) => {
+                // keyPattern should be the clean version (lowercase, no accents, no spaces)
+                return normalizedRow[keyPattern]
             }
 
             return {
-                semana: get('Semana')?.toString(),
-                mes: get('Mês')?.toString() || get('Mes')?.toString(),
-                ano: get('Ano')?.toString(),
-                dataEvidencia: get('Data Evidência') || get('Data Evidencia'),
-                modulo: get('Módulo')?.toString() || get('Modulo')?.toString(),
-                regiaoProgramacao: get('Região Programação') || get('Regiao Programacao'),
-                diasPendenciaAberta: Number(get('Dias Pendência Aberta') || get('Dias Pendencia Aberta') || 0),
-                frota: get('Frota')?.toString(),
-                tag: get('Tag')?.toString(),
-                tipo: get('Tipo')?.toString(),
-                descricaoAtividade: get('Descrição Atividade') || get('Descricao Atividade') || get('Descrição'),
-                origem: get('Origem')?.toString(),
-                criticidade: get('Criticidade')?.toString(),
-                tempoExecucaoPrevisto: get('Tempo Execução Previsto') || get('Tempo Execucao Previsto'),
-                campoBase: get('Campo Base')?.toString(),
-                os: get('OS')?.toString() || get('Ordem de Serviço')?.toString(),
-                material: get('Material')?.toString(),
-                numeroRc: get('Número RC') || get('Numero RC'),
-                numeroOrdem: get('Número Ordem') || get('Numero Ordem'),
-                fornecedor: get('Fornecedor')?.toString(),
-                dataRc: get('Data RC'),
-                detalhamentoPedido: get('Detalhamento Pedido'),
-                dataNecessidadeMaterial: get('Data Necessidade Material'),
-                tipoPedido: get('Tipo Pedido'),
-                previsaoMaterial: get('Previsão Material') || get('Previsao Material'),
-                situacaoRc: get('Situação RC') || get('Situacao RC'),
-                diasAberturaReqCompras: Number(get('Dias Abertura Req Compras') || 0),
-                dataProgramacao: get('Data Programação') || get('Data Programacao'),
-                maoDeObra: get('Mão de Obra') || get('Mao de Obra'),
-                deltaEvidenciaProgramacao: Number(get('Delta Evidência Programação') || get('Delta Evidencia Programacao') || 0),
-                statusProgramacao: get('Status Programação') || get('Status Programacao'),
-                previsaoConclusaoPendencia: get('Previsão Conclusão Pendência') || get('Previsao Conclusao Pendencia'),
-                dataConclusaoPendencia: get('Data Conclusão Pendência') || get('Data Conclusao Pendencia'),
-                diasResolucaoPendencia: Number(get('Dias Resolução Pendência') || get('Dias Resolucao Pendencia') || 0),
-                status: get('Status')?.toString(),
-                observacao: get('Observação') || get('Observacao')
+                semana: get('semana')?.toString(),
+                mes: get('mes')?.toString(),
+                ano: get('ano')?.toString(),
+                // Image: DATA DA EVIDENCIA
+                dataEvidencia: get('datadaevidencia'),
+                // Image: MÓDULO
+                modulo: get('modulo')?.toString(),
+                regiaoProgramacao: get('regiaoprogramacao'),
+                // Image: Dias de pendência aberta
+                diasPendenciaAberta: Number(get('diasdependenciaaberta') || 0),
+                // Image: Placa
+                frota: get('placa')?.toString(),
+                tag: get('tag')?.toString(),
+                // Image: TIPO
+                tipo: get('tipo')?.toString(),
+                // Image: DESCRIÇÃO DA ATIVIDADE
+                descricaoAtividade: get('descricaodaatividade'),
+                // Image: ORIGEM
+                origem: get('origem')?.toString(),
+                // Image: CRITICIDADE
+                criticidade: get('criticidade')?.toString(),
+                // Image: TEMPO DE EXECUÇÃO PREVISTO
+                tempoExecucaoPrevisto: get('tempodeexecucaoprevisto'),
+                // Image: CAMPO / BASE
+                campoBase: get('campobase')?.toString(),
+                // Image: O.S
+                os: get('os')?.toString(),
+                // Image: MATERIAL
+                material: get('material')?.toString(),
+                // Image: N° RC
+                numeroRc: get('nrc') || get('numerorc'),
+                // Image: N° PEDIDO (Assuming this maps to Numero Ordem based on context, or could be ignored if irrelevant)
+                numeroOrdem: get('npedido') || get('numeropedido') || get('numeroordem'),
+                // Image: FORNECEDOR
+                fornecedor: get('fornecedor')?.toString(),
+                // Image: DATA RC
+                dataRc: get('datarc'),
+                // Image: DETALHAMENTO DO PEDIDO
+                detalhamentoPedido: get('detalhamentodopedido'),
+                // Image: DATA NECESSIDADE DO MATERIAL
+                dataNecessidadeMaterial: get('datanecessidadedomaterial'),
+                // Image: TIPO DE PEDIDO
+                tipoPedido: get('tipodepedido'),
+                // Image: PREVISÃO DO MATERIAL
+                previsaoMaterial: get('previsaodomaterial'),
+                // Image: SITUAÇÃO RC
+                situacaoRc: get('situacaorc'),
+                // Image: DIAS (ABERTURA PENDÊNCIA/REQ. COMPRAS)
+                diasAberturaReqCompras: Number(get('diasaberturapendenciareqcompras') || 0),
+                // Image: DATA DE PROGRAMAÇÃO
+                dataProgramacao: get('datadeprogramacao'),
+                // Image: MÃO DE OBRA
+                maoDeObra: get('maodeobra'),
+                // Image: DELTA EVIDÊNCIA V.S DATA PROGRAMAÇÃO
+                deltaEvidenciaProgramacao: Number(get('deltaevidenciavsdataprogramacao') || 0),
+                statusProgramacao: get('statusprogramacao'),
+                // Image: PREVISÃO DE CONCLUSÃO PENDÊNCIA
+                previsaoConclusaoPendencia: get('previsaodeconclusaopendencia'),
+                // Image: DATA CONCLUSÃO DA PENDÊNCIA
+                dataConclusaoPendencia: get('dataconclusaodapendencia'),
+                // Image: DIAS DE RESOLUÇÃO DA PENDÊNCIA
+                diasResolucaoPendencia: Number(get('diasderesolucaodapendencia') || 0),
+                // Image: STATUS
+                status: get('status')?.toString(),
+                // Image: OBESERVAÇÃO (Typo in header)
+                observacao: get('obeservacao') || get('observacao')
             }
         })
     }

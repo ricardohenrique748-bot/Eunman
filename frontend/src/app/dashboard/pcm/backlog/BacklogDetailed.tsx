@@ -7,11 +7,14 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 export default function BacklogDetailed({ data }: { data: BacklogItem[] }) {
     const [search, setSearch] = useState('')
 
-    const filtered = data.filter(item =>
-        (item.descricaoAtividade?.toLowerCase().includes(search.toLowerCase())) ||
-        (item.frota?.toLowerCase().includes(search.toLowerCase())) ||
-        (item.os?.toLowerCase().includes(search.toLowerCase()))
-    )
+    const filtered = data.filter(item => {
+        const s = search.toLowerCase()
+        return (
+            (item.descricaoAtividade?.toLowerCase() || '').includes(s) ||
+            (item.frota?.toLowerCase() || '').includes(s) ||
+            (item.os?.toLowerCase() || '').includes(s)
+        )
+    })
 
     return (
         <div className="flex flex-col h-full overflow-hidden">

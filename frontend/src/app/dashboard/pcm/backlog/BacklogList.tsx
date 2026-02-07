@@ -8,11 +8,14 @@ import { useState } from 'react'
 export default function BacklogList({ data }: { data: BacklogItem[] }) {
     const [filter, setFilter] = useState('')
 
-    const filtered = data.filter(item =>
-        (item.descricaoAtividade?.toLowerCase().includes(filter.toLowerCase())) ||
-        (item.frota?.toLowerCase().includes(filter.toLowerCase())) ||
-        (item.numeroOrdem?.toLowerCase().includes(filter.toLowerCase()))
-    )
+    const filtered = data.filter(item => {
+        const search = filter.toLowerCase()
+        const desc = item.descricaoAtividade?.toLowerCase() || ''
+        const frota = item.frota?.toLowerCase() || ''
+        const ordem = (item.numeroOrdem || item.os)?.toLowerCase() || ''
+
+        return desc.includes(search) || frota.includes(search) || ordem.includes(search)
+    })
 
     return (
         <div className="flex flex-col h-full overflow-hidden">

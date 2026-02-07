@@ -301,7 +301,7 @@ export async function importBacklogItems(items: Omit<BacklogItem, 'id' | 'create
         const valuesList: string[] = []
 
         for (const data of items) {
-             const fields = [
+            const fields = [
                 'semana', 'mes', 'ano', 'modulo', 'regiao_programacao', 'dias_pendencia_aberta',
                 'frota', 'tag', 'tipo', 'descricao_atividade', 'origem', 'criticidade',
                 'tempo_execucao_previsto', 'campo_base', 'os', 'material', 'numero_rc',
@@ -311,7 +311,7 @@ export async function importBacklogItems(items: Omit<BacklogItem, 'id' | 'create
                 'status', 'observacao'
             ]
 
-             const dateFields = [
+            const dateFields = [
                 'data_evidencia', 'data_rc', 'data_necessidade_material', 'previsao_material',
                 'data_programacao', 'previsao_conclusao_pendencia', 'data_conclusao_pendencia'
             ]
@@ -339,10 +339,12 @@ export async function importBacklogItems(items: Omit<BacklogItem, 'id' | 'create
 
                     if (val === undefined || val === null || val === '') return 'NULL'
                     if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`
+                    if (val instanceof Date) return `'${val.toISOString()}'` // Handle accidental dates in text fields
+                    if (typeof val === 'object') return `'${JSON.stringify(val).replace(/'/g, "''")}'` // Fallback for objects
                     return val
                 }),
                 ...dateFields.map(f => {
-                   let val: any
+                    let val: any
                     if (f === 'data_evidencia') val = data.dataEvidencia
                     else if (f === 'data_rc') val = data.dataRc
                     else if (f === 'data_necessidade_material') val = data.dataNecessidadeMaterial
@@ -351,15 +353,17 @@ export async function importBacklogItems(items: Omit<BacklogItem, 'id' | 'create
                     else if (f === 'previsao_conclusao_pendencia') val = data.previsaoConclusaoPendencia
                     else if (f === 'data_conclusao_pendencia') val = data.dataConclusaoPendencia
 
-                    if (!val) return 'NULL'
+                    if (val === undefined || val === null || val === '') return 'NULL'
                     try {
-                         return `'${new Date(val).toISOString()}'`
+                        const d = new Date(val)
+                        if (isNaN(d.getTime())) return 'NULL'
+                        return `'${d.toISOString()}'`
                     } catch {
                         return 'NULL'
                     }
                 })
             ].join(', ')
-            
+
             valuesList.push(`(gen_random_uuid(), NOW(), NOW(), ${values})`)
         }
 
@@ -382,13 +386,13 @@ export async function importBacklogItems(items: Omit<BacklogItem, 'id' | 'create
         const CHUNK_SIZE = 50
         for (let i = 0; i < valuesList.length; i += CHUNK_SIZE) {
             const chunk = valuesList.slice(i, i + CHUNK_SIZE)
-             const query = `
+            const query = `
                 INSERT INTO "backlog_pcm" (id, created_at, updated_at, ${columns})
                 VALUES ${chunk.join(', ')}
             `
             await prisma.$executeRawUnsafe(query)
         }
-       
+
         revalidatePath('/dashboard/pcm/backlog')
         return { success: true, count: items.length }
     } catch (e: any) {
