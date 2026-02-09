@@ -1,7 +1,8 @@
 
 import { createVeiculo } from '@/app/actions/frota-actions'
-import { ArrowLeft, Save, Calendar, FileText } from 'lucide-react'
+import { ArrowLeft, Save, Calendar } from 'lucide-react'
 import Link from 'next/link'
+import { DocCard } from './components/DocCard'
 
 export default function NovoVeiculoPage() {
     return (
@@ -89,29 +90,4 @@ export default function NovoVeiculoPage() {
     )
 }
 
-function DocCard({ title, prefix }: { title: string, prefix: string }) {
-    return (
-        <div className="bg-surface border border-border-color rounded-xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
-            <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-4 text-sm flex items-center gap-2">
-                <FileText className="w-4 h-4 text-gray-400" />
-                {title}
-            </h4>
-            <div className="space-y-3">
-                <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase">Número do Documento</label>
-                    <input name={`${prefix}_numero`} placeholder="Nº do documento" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-sm focus:border-primary outline-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase">Data de Expedição</label>
-                        <input name={`${prefix}_emissao`} type="date" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-sm focus:border-primary outline-none text-gray-500" />
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase">Data de Validade</label>
-                        <input name={`${prefix}_validade`} type="date" className="w-full bg-surface-highlight border border-border-color rounded px-3 py-2 text-sm focus:border-primary outline-none text-gray-500" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
+

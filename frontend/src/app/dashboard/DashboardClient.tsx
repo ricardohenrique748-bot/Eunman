@@ -204,15 +204,15 @@ export default function DashboardClient({ metrics, chartData, preventiveData, re
                         <div className="flex flex-col w-full">
                             <p className="text-[10px] font-black uppercase text-gray-500 mb-2 tracking-widest">Documentos da Frota</p>
                             <div className="grid grid-cols-3 gap-3 w-full">
-                                <Link href="/dashboard/frota" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
+                                <Link href="/dashboard/admin" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
                                     <span className="text-xl font-black text-emerald-500 leading-none">{metrics.docs?.valid ?? 0}</span>
                                     <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Ok</span>
                                 </Link>
-                                <Link href="/dashboard/frota" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
+                                <Link href="/dashboard/admin" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
                                     <span className="text-xl font-black text-yellow-500 leading-none">{metrics.docs?.attention ?? 0}</span>
                                     <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Avisos</span>
                                 </Link>
-                                <Link href="/dashboard/frota" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
+                                <Link href="/dashboard/admin" className="flex flex-col hover:bg-surface-highlight/50 p-1 rounded-lg transition-colors">
                                     <span className="text-xl font-black text-red-500 leading-none">{metrics.docs?.expired ?? 0}</span>
                                     <span className="text-[8px] font-bold text-gray-400 uppercase mt-1">Venc</span>
                                 </Link>

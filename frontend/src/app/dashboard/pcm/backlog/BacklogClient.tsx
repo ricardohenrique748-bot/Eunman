@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, ListTodo, TableProperties, RefreshCw, FileSpreadsheet, Plus, FileUp, List } from 'lucide-react'
+import { LayoutDashboard, ListTodo, TableProperties, RefreshCw, FileSpreadsheet, Plus, FileUp, List, Search, Filter, X } from 'lucide-react'
 import BacklogList from './BacklogList'
 import BacklogDashboard from './BacklogDashboard'
 import BacklogDetailed from './BacklogDetailed'
@@ -17,7 +17,41 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false)
     const [isImportOpen, setIsImportOpen] = useState(false)
 
+
     const [editingItem, setEditingItem] = useState<BacklogItem | undefined>(undefined)
+
+    // Filter State
+    const [searchTerm, setSearchTerm] = useState('')
+    const [filterMonth, setFilterMonth] = useState('')
+    const [filterYear, setFilterYear] = useState('')
+
+    // Derived Data
+    const filteredData = data.filter(item => {
+        // Filter by Search (Plate/Frota)
+        const matchesSearch = searchTerm === '' ||
+            (item.frota?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+            (item.tag?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+            (item.os?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+
+        // Filter by Month
+        // Normalize item.mes to handle various formats if necessary, assuming exact match for now or index
+        // If stored as "Janeiro", we match string. If number, we match number.
+        // Let's assume text match for flexibility or try both.
+        const matchesMonth = filterMonth === '' ||
+            (item.mes?.toString().toLowerCase() === filterMonth.toLowerCase())
+
+        // Filter by Year
+        const matchesYear = filterYear === '' ||
+            (item.ano?.toString() === filterYear)
+
+        return matchesSearch && matchesMonth && matchesYear
+    })
+
+    const months = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ]
+    const years = ["2023", "2024", "2025", "2026"]
 
     // Export to Excel
     const handleExport = () => {
@@ -87,6 +121,66 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
                 </div>
             </div>
 
+            {/* Filters Bar */}
+            <div className="bg-surface border border-border-color p-4 rounded-2xl shadow-sm flex flex-wrap gap-4 items-end">
+                <div className="space-y-1.5 flex-1 min-w-[200px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Buscar Placa / OS</label>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                            placeholder="Digite a placa, tag ou OS..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full bg-surface-highlight border border-border-color rounded-xl pl-9 pr-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-1.5 min-w-[140px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Mês</label>
+                    <select
+                        value={filterMonth}
+                        onChange={e => setFilterMonth(e.target.value)}
+                        className="w-full bg-surface-highlight border border-border-color rounded-xl px-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                    >
+                        <option value="">Todos</option>
+                        {months.map(m => (
+                            <option key={m} value={m}>{m}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="space-y-1.5 min-w-[100px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Ano</label>
+                    <select
+                        value={filterYear}
+                        onChange={e => setFilterYear(e.target.value)}
+                        className="w-full bg-surface-highlight border border-border-color rounded-xl px-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                    >
+                        <option value="">Todos</option>
+                        {years.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="border-l border-border-color h-10 mx-2 hidden md:block"></div>
+
+                <div className="flex items-center gap-2 pb-2">
+                    <div className="bg-gray-100 dark:bg-surface-highlight px-4 py-2 rounded-lg text-sm font-bold text-gray-600">
+                        {filteredData.length} <span className="text-[10px] font-normal uppercase ml-1">Itens</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Tabs */}
             <div className="flex space-x-1 bg-surface p-1 rounded-xl border border-border-color w-fit">
                 <button
@@ -114,9 +208,9 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
 
             {/* Content */}
             <div className="flex-1 min-h-0 bg-surface border border-border-color rounded-2xl overflow-hidden shadow-sm">
-                {view === 'LIST' && <BacklogList data={data} />}
-                {view === 'DASHBOARD' && <BacklogDashboard data={data} />}
-                {view === 'DETAILED' && <BacklogDetailed data={data} />}
+                {view === 'LIST' && <BacklogList data={filteredData} />}
+                {view === 'DASHBOARD' && <BacklogDashboard data={filteredData} />}
+                {view === 'DETAILED' && <BacklogDetailed data={filteredData} />}
             </div>
 
             {/* Dialogs */}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, Users, Database, Settings, Plus, X, Check, Save, AlertTriangle, Edit, Trash2, FileSpreadsheet } from 'lucide-react'
+import { Building2, Users, Database, Settings, Plus, X, Check, Save, AlertTriangle, Edit, Trash2, FileSpreadsheet, FileText, Search, Filter } from 'lucide-react'
 import { createEmpresa, createUsuario, createUnidade, updateSystemParam, toggleUsuarioStatus, deleteUsuario, deleteVeiculo, deleteEmpresa, deleteUnidade, updateUsuario, updateVeiculo, updateEmpresa, updateUnidade, createOsMotivo, deleteOsMotivo, createOsSistema, deleteOsSistema, createOsSubSistema, deleteOsSubSistema } from '@/app/actions/admin-actions'
 import { importVeiculosExcel } from '@/app/actions/frota-actions'
 import Link from 'next/link'
@@ -516,57 +516,139 @@ export default function SettingsClient({ veiculos, usuarios, empresas, systemPar
 }
 
 function DatabaseSection({ veiculos, isAdmin, onDelete, onEdit }: { veiculos: Veiculo[], isAdmin: boolean, onDelete: (type: string, id: string) => void, onEdit: (type: 'vehicle', data: Veiculo) => void }) {
+    const [searchTerm, setSearchTerm] = useState('')
+    const [filterMonth, setFilterMonth] = useState<string>('')
+    const [filterYear, setFilterYear] = useState<string>('')
+
+    const filteredVeiculos = veiculos.filter(v => {
+        const term = searchTerm.toLowerCase()
+        const matchesSearch =
+            (v.placa?.toLowerCase() || '').includes(term) ||
+            v.codigoInterno.toLowerCase().includes(term) ||
+            v.modelo.toLowerCase().includes(term)
+
+        let matchesPeriod = true
+        if (filterMonth !== '' || filterYear !== '') {
+            // Se tiver filtro de período, verifica se ALGUM documento vence nesse período
+            // Se selecionar apenas ano, vê ano. Se mês e ano, vê ambos.
+            matchesPeriod = v.documentos?.some(d => {
+                if (!d.dataValidade) return false
+                // Ajuste de fuso: criar data ignorando hora para comparar Mês/Ano corretamente
+                const dt = new Date(d.dataValidade)
+                const docMonth = dt.getUTCMonth() // 0-11
+                const docYear = dt.getUTCFullYear()
+
+                const matchM = filterMonth === '' || docMonth === Number(filterMonth)
+                const matchY = filterYear === '' || docYear === Number(filterYear)
+
+                return matchM && matchY
+            }) ?? false
+        }
+
+        return matchesSearch && matchesPeriod
+    })
+
+    const months = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ]
+    const years = [2024, 2025, 2026, 2027]
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
-            <div className="flex justify-between items-center bg-white dark:bg-surface p-6 rounded-2xl border border-border-color shadow-sm">
-                <div>
-                    <h3 className="text-2xl font-bold text-foreground">Frota e Ativos</h3>
-                    <p className="text-gray-500 text-sm mt-0.5 font-medium">Listagem técnica de todos os veículos operacionais.</p>
-                </div>
-                <div className="flex gap-3 items-center">
-                    <div className="bg-gray-100 dark:bg-surface-highlight px-4 py-2 rounded-lg text-sm font-bold text-gray-600">
-                        {veiculos.length} Veículos
+            {/* Filters Bar */}
+            <div className="bg-surface border border-border-color p-4 rounded-2xl shadow-sm flex flex-wrap gap-4 items-end">
+                <div className="space-y-1.5 flex-1 min-w-[200px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Buscar Veículo</label>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                            placeholder="Placa, Código ou Modelo..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full bg-surface-highlight border border-border-color rounded-xl pl-9 pr-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                        />
                     </div>
-                    {isAdmin && (
-                        <div className="flex gap-2">
-                            <label className="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-                                <FileSpreadsheet className="w-4 h-4" /> Importar Excel
-                                <input
-                                    type="file"
-                                    accept=".xlsx, .xls"
-                                    className="hidden"
-                                    onChange={async (e) => {
-                                        const file = e.target.files?.[0]
-                                        if (!file) return
-
-                                        console.log('Iniciando importação direta...')
-                                        const formData = new FormData()
-                                        formData.append('file', file)
-
-                                        const res = await importVeiculosExcel(formData)
-                                        console.log('Resultado:', res)
-
-                                        if (res.success) {
-                                            const errorCount = res.errors?.length ?? 0
-                                            if (errorCount > 0) {
-                                                alert(`Importação concluída com avisos!\nSucesso: ${res.count}\nErros: ${errorCount}\nÚltimo Erro: ${res.error}`)
-                                            } else {
-                                                alert(`Importação concluída com sucesso!\n${res.count} veículos importados.`)
-                                            }
-                                        } else {
-                                            alert(`Erro Crítico: ${res.error}`)
-                                        }
-                                    }}
-                                />
-                            </label>
-                            <Link href="/dashboard/frota/novo">
-                                <button className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-600 transition-colors">
-                                    <Plus className="w-4 h-4" /> Novo Ativo
-                                </button>
-                            </Link>
-                        </div>
-                    )}
                 </div>
+
+                <div className="space-y-1.5 min-w-[140px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Vencimento (Mês)</label>
+                    <select
+                        value={filterMonth}
+                        onChange={e => setFilterMonth(e.target.value)}
+                        className="w-full bg-surface-highlight border border-border-color rounded-xl px-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                    >
+                        <option value="">Todos</option>
+                        {months.map((m, i) => (
+                            <option key={m} value={i}>{m}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="space-y-1.5 min-w-[100px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Vencimento (Ano)</label>
+                    <select
+                        value={filterYear}
+                        onChange={e => setFilterYear(e.target.value)}
+                        className="w-full bg-surface-highlight border border-border-color rounded-xl px-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                    >
+                        <option value="">Todos</option>
+                        {years.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="border-l border-border-color h-10 mx-2 hidden md:block"></div>
+
+                <div className="flex items-center gap-2 pb-2">
+                    <div className="bg-gray-100 dark:bg-surface-highlight px-4 py-2 rounded-lg text-sm font-bold text-gray-600">
+                        {filteredVeiculos.length} <span className="text-[10px] font-normal uppercase ml-1">Veículos Listados</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-between items-center px-2">
+                <div>
+                    <h3 className="text-xl font-bold text-foreground">Listagem de Frota</h3>
+                </div>
+                {isAdmin && (
+                    <div className="flex gap-2">
+                        <label className="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                            <FileSpreadsheet className="w-4 h-4" /> Importar Excel
+                            <input
+                                type="file"
+                                accept=".xlsx, .xls"
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0]
+                                    if (!file) return
+
+                                    console.log('Iniciando importação direta...')
+                                    const formData = new FormData()
+                                    formData.append('file', file)
+
+                                    const res = await importVeiculosExcel(formData)
+                                    if (res.success) {
+                                        const errorCount = res.errors?.length ?? 0
+                                        if (errorCount > 0) {
+                                            alert(`Importação concluída com avisos!\nSucesso: ${res.count}\nErros: ${errorCount}\nÚltimo Erro: ${res.error}`)
+                                        } else {
+                                            alert(`Importação concluída com sucesso!\n${res.count} veículos importados.`)
+                                        }
+                                    } else {
+                                        alert(`Erro Crítico: ${res.error}`)
+                                    }
+                                }}
+                            />
+                        </label>
+                        <Link href="/dashboard/frota/novo">
+                            <button className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-600 transition-colors">
+                                <Plus className="w-4 h-4" /> Novo Ativo
+                            </button>
+                        </Link>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white dark:bg-surface border border-border-color rounded-2xl overflow-hidden shadow-sm">
@@ -578,11 +660,19 @@ function DatabaseSection({ veiculos, isAdmin, onDelete, onEdit }: { veiculos: Ve
                             <th className="px-6 py-4">Placa</th>
                             <th className="px-6 py-4">Unidade</th>
                             <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4">Documentos</th>
                             {isAdmin && <th className="px-6 py-4 text-right">Ações</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-color">
-                        {veiculos.map((v) => (
+                        {filteredVeiculos.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-8 text-center text-gray-500 font-medium">
+                                    Nenhum veículo encontrado para os filtros selecionados.
+                                </td>
+                            </tr>
+                        )}
+                        {filteredVeiculos.map((v) => (
                             <tr key={v.id} className="hover:bg-gray-50/50 dark:hover:bg-surface-highlight/30 transition-colors group">
                                 <td className="px-6 py-4 font-bold text-primary">{v.codigoInterno}</td>
                                 <td className="px-6 py-4 font-medium text-foreground">{v.modelo}</td>
@@ -592,6 +682,9 @@ function DatabaseSection({ veiculos, isAdmin, onDelete, onEdit }: { veiculos: Ve
                                     <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${v.status === 'DISPONIVEL' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
                                         {v.status}
                                     </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <DocStatusBadge documentos={v.documentos} />
                                 </td>
                                 {isAdmin && (
                                     <td className="px-6 py-4 text-right">
@@ -1088,5 +1181,60 @@ function SystemParamRow({ param, isAdmin }: { param: SystemParam, isAdmin: boole
                 )}
             </div>
         </form>
+    )
+}
+
+function DocStatusBadge({ documentos }: { documentos?: Veiculo['documentos'] }) {
+    if (!documentos || documentos.length === 0) {
+        return <span className="text-gray-400 text-xs">-</span>
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const warningDate = new Date(today)
+    warningDate.setDate(today.getDate() + 30)
+
+    let status = 'valid' // default
+    let count = 0
+
+    for (const d of documentos) {
+        if (d.dataValidade) {
+            const v = new Date(d.dataValidade)
+            v.setHours(0, 0, 0, 0)
+
+            if (v < today) {
+                status = 'expired'
+                break // Worst case wins
+            }
+            if (v <= warningDate) {
+                status = 'warning'
+            }
+        }
+        count++
+    }
+
+    if (count === 0) return <span className="text-gray-400 text-xs">-</span>
+
+    if (status === 'expired') {
+        return (
+            <div className="flex items-center gap-1 text-red-500 bg-red-50 border border-red-100 px-2 py-0.5 rounded-md w-fit" title="Documentação Vencida">
+                <FileText className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase">Vencido</span>
+            </div>
+        )
+    }
+    if (status === 'warning') {
+        return (
+            <div className="flex items-center gap-1 text-yellow-600 bg-yellow-50 border border-yellow-100 px-2 py-0.5 rounded-md w-fit" title="Vence em breve">
+                <FileText className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase">Atenção</span>
+            </div>
+        )
+    }
+    return (
+        <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md w-fit" title="Documentação em dia">
+            <FileText className="w-3 h-3" />
+            <span className="text-[10px] font-bold uppercase">Ok</span>
+        </div>
     )
 }
