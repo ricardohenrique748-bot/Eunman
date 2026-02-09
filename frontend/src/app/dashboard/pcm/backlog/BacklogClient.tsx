@@ -24,6 +24,7 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterMonth, setFilterMonth] = useState('')
     const [filterYear, setFilterYear] = useState('')
+    const [filterStatus, setFilterStatus] = useState('')
 
     // Derived Data
     const filteredData = data.filter(item => {
@@ -44,7 +45,11 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
         const matchesYear = filterYear === '' ||
             (item.ano?.toString() === filterYear)
 
-        return matchesSearch && matchesMonth && matchesYear
+        // Filter by Status
+        const matchesStatus = filterStatus === '' ||
+            (item.status === filterStatus)
+
+        return matchesSearch && matchesMonth && matchesYear && matchesStatus
     })
 
     const months = [
@@ -52,6 +57,9 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
         "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ]
     const years = ["2023", "2024", "2025", "2026"]
+
+    // Get unique statuses from data for the dropdown
+    const statuses = Array.from(new Set(data.map(i => i.status).filter(Boolean) as string[])).sort()
 
     // Export to Excel
     const handleExport = () => {
@@ -172,6 +180,21 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
                     </select>
                 </div>
 
+                <div className="space-y-1.5 min-w-[140px]">
+                    <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Status</label>
+                    <select
+                        value={filterStatus}
+                        onChange={e => setFilterStatus(e.target.value)}
+                        className="w-full bg-surface-highlight border border-border-color rounded-xl px-3 py-2 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                    >
+                        <option value="">Todos</option>
+                        {statuses.map(s => (
+                            <option key={s} value={s}>{s}</option>
+                        ))}
+                    </select>
+                </div>
+
+
                 <div className="border-l border-border-color h-10 mx-2 hidden md:block"></div>
 
                 <div className="flex items-center gap-2 pb-2">
@@ -208,19 +231,21 @@ export default function BacklogClient({ initialData }: { initialData: any[] }) {
 
             {/* Content */}
             <div className="flex-1 min-h-0 bg-surface border border-border-color rounded-2xl overflow-hidden shadow-sm">
-                {view === 'LIST' && <BacklogList data={filteredData} />}
+                {view === 'LIST' && <BacklogList data={filteredData} onEdit={handleEdit} onDelete={handleDelete} />}
                 {view === 'DASHBOARD' && <BacklogDashboard data={filteredData} />}
                 {view === 'DETAILED' && <BacklogDetailed data={filteredData} />}
             </div>
 
             {/* Dialogs */}
-            {isCreateOpen && (
-                <BacklogFormDialog
-                    isOpen={isCreateOpen}
-                    onClose={() => setIsCreateOpen(false)}
-                    onSuccess={() => window.location.reload()} // For simplicity, full reload or re-fetch via action
-                />
-            )}
+            {
+                isCreateOpen && (
+                    <BacklogFormDialog
+                        isOpen={isCreateOpen}
+                        onClose={() => setIsCreateOpen(false)}
+                        onSuccess={() => window.location.reload()} // For simplicity, full reload or re-fetch via action
+                    />
+                )
+            }
             <ImportBacklogDialog
                 isOpen={isImportOpen}
                 onClose={() => setIsImportOpen(false)}

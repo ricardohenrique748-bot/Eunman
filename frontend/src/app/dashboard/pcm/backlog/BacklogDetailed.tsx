@@ -54,7 +54,14 @@ export default function BacklogDetailed({ data }: { data: BacklogItem[] }) {
                                 <td className="p-3">{item.dataEvidencia ? new Date(item.dataEvidencia).toLocaleDateString() : ''}</td>
                                 <td className="p-3">{item.modulo}</td>
                                 <td className="p-3">{item.regiaoProgramacao}</td>
-                                <td className="p-3">{item.diasPendenciaAberta}</td>
+                                <td className="p-3 text-center">
+                                    {(() => {
+                                        if (!item.dataEvidencia) return 0
+                                        if (item.status === 'CONCLUIDO') return 0
+                                        const days = Math.floor((new Date().getTime() - new Date(item.dataEvidencia).getTime()) / (1000 * 3600 * 24))
+                                        return days > 0 ? days : 0
+                                    })()}
+                                </td>
                                 <td className="p-3 font-bold">{item.frota}</td>
                                 <td className="p-3">{item.tag}</td>
                                 <td className="p-3">{item.tipo}</td>

@@ -3,7 +3,7 @@
 import React from 'react'
 import { BacklogItem } from '@/app/actions/backlog-actions'
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, LabelList
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle, CheckCircle2, Factory, Hammer } from 'lucide-react'
@@ -12,7 +12,9 @@ export default function BacklogDashboard({ data }: { data: BacklogItem[] }) {
 
     // Process Data
     const total = data.length
-    const critical = data.filter(i => i.criticidade === 'CRITICO').length
+
+    const criticalA = data.filter(i => i.criticidade === 'A').length
+    const criticalB = data.filter(i => i.criticidade === 'B').length
     const pending = data.filter(i => i.status !== 'CONCLUIDO').length
     const completed = total - pending
 
@@ -34,7 +36,7 @@ export default function BacklogDashboard({ data }: { data: BacklogItem[] }) {
     return (
         <div className="p-6 space-y-6 overflow-y-auto h-full custom-scrollbar">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-surface shadow-none border-border-color/50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total de Itens</CardTitle>
@@ -45,14 +47,25 @@ export default function BacklogDashboard({ data }: { data: BacklogItem[] }) {
                         <p className="text-xs text-muted-foreground">+20.1% from last month</p>
                     </CardContent>
                 </Card>
+
                 <Card className="bg-surface shadow-none border-border-color/50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Críticos</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-red-500" />
+                        <CardTitle className="text-sm font-medium">Criticidade A</CardTitle>
+                        <AlertCircle className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-500">{critical}</div>
-                        <p className="text-xs text-muted-foreground">Itens de alta prioridade</p>
+                        <div className="text-2xl font-bold text-orange-500">{criticalA}</div>
+                        <p className="text-xs text-muted-foreground">Alta relevância</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-surface shadow-none border-border-color/50">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Criticidade B</CardTitle>
+                        <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-yellow-500">{criticalB}</div>
+                        <p className="text-xs text-muted-foreground">Média relevância</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-surface shadow-none border-border-color/50">
@@ -103,7 +116,9 @@ export default function BacklogDashboard({ data }: { data: BacklogItem[] }) {
                                     contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }}
                                     itemStyle={{ color: '#fff' }}
                                 />
-                                <Bar dataKey="value" fill="#adfa1d" radius={[4, 4, 0, 0]} className="fill-primary" />
+                                <Bar dataKey="value" fill="#adfa1d" radius={[4, 4, 0, 0]} className="fill-primary">
+                                    <LabelList dataKey="value" position="top" className="fill-foreground text-xs font-bold" />
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
