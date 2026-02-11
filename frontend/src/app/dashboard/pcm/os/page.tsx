@@ -2,6 +2,7 @@ import { Plus, Filter, Search, MoreHorizontal, Calendar, Wrench, AlertCircle, Ch
 import Link from 'next/link'
 import { getOrdensServico } from '@/app/actions/pcm-actions'
 import { OrdemServico, Veiculo } from '@prisma/client'
+import OsRowActions from './OsRowActions'
 
 type OrdemServicoComVeiculo = OrdemServico & { veiculo: Veiculo }
 
@@ -116,9 +117,10 @@ export default async function PcmPage(props: any) {
                                             <BadgeStatus status={os.status} />
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <button className="w-8 h-8 rounded-xl bg-surface-highlight hover:bg-primary/10 text-gray-400 hover:text-primary transition-all flex items-center justify-center">
-                                                <MoreHorizontal className="w-4 h-4" />
-                                            </button>
+                                            <OsRowActions
+                                                osId={os.id}
+                                                osNumero={os.numeroOS.toString().padStart(5, '0')}
+                                            />
                                         </td>
                                     </tr>
                                 ))

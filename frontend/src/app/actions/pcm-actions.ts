@@ -202,3 +202,23 @@ export async function updateSemanaPreventiva(
         return { success: false, error: 'Failed to update schedule' }
     }
 }
+
+export async function deleteOrdemServico(id: string) {
+    try {
+        const session = await getSession()
+        if (!session) return { success: false, error: 'Não autenticado' }
+
+        // Optional: Add permission check here if needed
+
+        await prisma.ordemServico.delete({
+            where: { id }
+        })
+
+        revalidatePath('/dashboard/pcm/os')
+        revalidatePath('/dashboard')
+        return { success: true }
+    } catch (error: any) {
+        console.error('[PCM Action] Erro ao excluir OS:', error)
+        return { success: false, error: `Falha ao excluir O.S.: ${error.message}` }
+    }
+}

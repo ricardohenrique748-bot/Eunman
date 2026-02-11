@@ -133,6 +133,34 @@ export async function getBacklogItems(filters: any = {}) {
     }
 }
 
+export async function getBacklogByVehicle(identifiers: string[]) {
+    if (!identifiers || identifiers.length === 0) return { success: false, data: [] }
+
+    try {
+        const idList = identifiers
+            .filter(Boolean)
+            .map(id => `'${id.toLowerCase().replace(/'/g, "''")}'`)
+            .join(',')
+
+        if (!idList) return { success: false, data: [] }
+
+        // Search by placa or codigoInterno in the frota field
+        // Only get PENDING status items
+        const query = `
+            SELECT * FROM "backlog_pcm" 
+            WHERE (LOWER(frota) IN (${idList}))
+            AND (status IS NULL OR (LOWER(status) NOT IN ('concluido', 'concluída', 'encerrado', 'encerrada')))
+            ORDER BY "data_evidencia" DESC
+        `
+        const rawData = await prisma.$queryRawUnsafe(query)
+        const data = (rawData as any[]).map(mapRawToBacklog)
+        return { success: true, data }
+    } catch (error) {
+        console.error('Error fetching backlog by vehicle:', error)
+        return { success: false, error: 'Erro ao buscar pendências do veículo' }
+    }
+}
+
 export async function createBacklogItem(data: Omit<BacklogItem, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
         // Construct INSERT statement dynamically

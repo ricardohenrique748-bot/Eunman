@@ -1,7 +1,8 @@
 'use client'
 
 import { createOrdemServico } from '@/app/actions/pcm-actions'
-import { ArrowLeft, Calendar, Clock } from 'lucide-react'
+import { getBacklogByVehicle } from '@/app/actions/backlog-actions'
+import { ArrowLeft, Calendar, Clock, Loader2, CheckCircle2, Printer, List } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -37,8 +38,85 @@ export default function NovaOSForm({ veiculos, osOptions }: {
     const router = useRouter()
     const [enviadoReserva, setEnviadoReserva] = useState(false)
     const [selectedSistemaId, setSelectedSistemaId] = useState<string>('')
+    const [descricao, setDescricao] = useState('')
+    const [isFetchingBacklog, setIsFetchingBacklog] = useState(false)
+    const [isSuccess, setIsSuccess] = useState(false)
+    const [lastCreatedOS, setLastCreatedOS] = useState<string | null>(null)
 
     const filteredSubSistemas = osOptions.sistemas.find(s => s.id === selectedSistemaId)?.subSistemas || []
+
+    const handleVeiculoChange = async (veiculoId: string) => {
+        if (!veiculoId) return
+
+        const veiculo = veiculos.find(v => v.id === veiculoId)
+        if (!veiculo) return
+
+        setIsFetchingBacklog(true)
+        // Buscamos o código interno e placa para garantir o match
+        const identifiers = [veiculo.codigoInterno, veiculo.placa].filter(Boolean) as string[]
+        const res = await getBacklogByVehicle(identifiers)
+
+        if (res.success && res.data && res.data.length > 0) {
+            const backlogText = res.data
+                .map(item => `• ${item.descricaoAtividade}${item.criticidade ? ` [${item.criticidade}]` : ''}`)
+                .join('\n')
+
+            const novoTexto = `PENDÊNCIAS DO BACKLOG:\n${backlogText}`
+
+            // Se já houver descrição, adicionamos ao fim, senão substituímos
+            setDescricao(prev => {
+                if (!prev) return novoTexto
+                if (prev.includes('PENDÊNCIAS DO BACKLOG:')) {
+                    // Substituir bloco antigo se o usuário trocar de veículo
+                    return prev.replace(/PENDÊNCIAS DO BACKLOG:[\s\S]*/g, novoTexto)
+                }
+                return `${prev}\n\n${novoTexto}`
+            })
+        }
+        setIsFetchingBacklog(false)
+    }
+
+    if (isSuccess) {
+        return (
+            <div className="max-w-2xl mx-auto py-20 text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                <div className="flex justify-center">
+                    <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center border-4 border-emerald-500/20">
+                        <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-black text-foreground tracking-tight">O.S. Aberta com Sucesso!</h1>
+                    <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">
+                        A Ordem de Serviço foi registrada no histórico do sistema.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8">
+                    <button
+                        onClick={() => window.print()}
+                        className="flex items-center justify-center gap-3 bg-surface border-2 border-border-color hover:border-primary/50 text-foreground px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:shadow-xl hover:-translate-y-1"
+                    >
+                        <Printer className="w-5 h-5 text-primary" />
+                        Imprimir O.S.
+                    </button>
+                    <Link href="/dashboard/pcm/os">
+                        <button className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-1">
+                            <List className="w-5 h-5" />
+                            Ver Histórico
+                        </button>
+                    </Link>
+                </div>
+
+                <button
+                    onClick={() => setIsSuccess(false)}
+                    className="text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
+                >
+                    Abrir Nova Ordem de Serviço
+                </button>
+            </div>
+        )
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -59,7 +137,7 @@ export default function NovaOSForm({ veiculos, osOptions }: {
                 <form action={async (formData) => {
                     const res = await createOrdemServico(formData)
                     if (res.success) {
-                        router.push('/dashboard/pcm/os')
+                        setIsSuccess(true)
                     } else {
                         alert(res.error)
                     }
@@ -73,8 +151,16 @@ export default function NovaOSForm({ veiculos, osOptions }: {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Veículo / Placa *</label>
-                                <select name="veiculoId" required className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    Veículo / Placa *
+                                    {isFetchingBacklog && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                                </label>
+                                <select
+                                    name="veiculoId"
+                                    required
+                                    className="w-full bg-background border border-border-color rounded-xl px-4 py-3.5 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer"
+                                    onChange={(e) => handleVeiculoChange(e.target.value)}
+                                >
                                     <option value="">Selecione o Veículo</option>
                                     {veiculos.map((v) => (
                                         <option key={v.id} value={v.id}>{v.codigoInterno} - {v.modelo} ({v.placa || 'Interno'})</option>
@@ -167,7 +253,15 @@ export default function NovaOSForm({ veiculos, osOptions }: {
 
                         <div className="space-y-2">
                             <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest ml-1">Descrição Detalhada do Problema *</label>
-                            <textarea name="descricao" rows={4} required placeholder="Descreva os sintomas, falhas observadas ou serviços a serem realizados..." className="w-full bg-background border border-border-color rounded-xl px-4 py-4 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all resize-none"></textarea>
+                            <textarea
+                                name="descricao"
+                                rows={6}
+                                required
+                                value={descricao}
+                                onChange={(e) => setDescricao(e.target.value)}
+                                placeholder="Descreva os sintomas, falhas observadas ou serviços a serem realizados..."
+                                className="w-full bg-background border border-border-color rounded-xl px-4 py-4 text-foreground font-bold focus:ring-2 focus:ring-primary outline-none transition-all resize-none shadow-inner"
+                            />
                         </div>
                     </div>
 
